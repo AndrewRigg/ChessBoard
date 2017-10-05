@@ -6,11 +6,19 @@ public class Player {
 	String name;
 	String notes;
 	PlayerType type;
+	double time;
+	int timeAllowance;
+	int minutes;
+	int seconds;
+	String timeDisplay = "";
 	
-	public Player(String name, PlayerType type, int rank) {
+	public Player(String name, PlayerType type, int rank, double time, int timeAllowance) {
 		this.name = name;
 		this.type = type;
 		this.rank = rank;
+		minutes = (int) (time /60);
+		seconds = (int) (time %60);
+		timeDisplay = "" + minutes + ":" + seconds;
 	}
 
 	public String getName() {

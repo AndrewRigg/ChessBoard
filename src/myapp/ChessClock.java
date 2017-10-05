@@ -7,20 +7,11 @@
 
 package myapp;
 
-import java.time.*;
-
 public class ChessClock {
 
-	double p1Time;
-	double p2Time;
-	double timeAllowance;
-	int p1Minutes;
-	int p2Minutes;
-	int p1Seconds;
-	int p2Seconds;
-	String p1Display = "";
-	String p2Display = "";
-	boolean p1ClockRunning = true;
+
+	Player p1, p2;
+	boolean playerTurn = true;
 	
 	public ChessClock(ClockMode mode, double p1Time, double p2Time) {
 		
@@ -29,15 +20,21 @@ public class ChessClock {
 		
 		long end = System.currentTimeMillis();
 		if((end - start) == 1000){
-			//updateClock(){
-			
+			if(playerTurn) {
+				updateClock(p1);
+			}else {
+				updateClock(p2);
+			}
 		}
+			
 	}	
 	
-//	public updateClock(Player player) {
-//		p1Minutes 
-//		p1Display = p1Minutes + ":" + p1Seconds;
-//	}
+	public void updateClock(Player player) {
+		p1.time--;
+		p1.minutes = (int) (p1.time /60);
+		p1.seconds = (int) (p1.time %60);
+		p1.timeDisplay = p1.minutes + ":" + p1.seconds;
+	}
 	
 	
 }
