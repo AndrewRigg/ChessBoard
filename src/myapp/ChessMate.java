@@ -2,12 +2,14 @@ package myapp;
 
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
@@ -34,6 +36,7 @@ public class ChessMate extends Application {
 		BorderPane root = new BorderPane();
 		GridPane board = new GridPane();
 		MenuBar menuBar = new MenuBar();
+		ChessClock clock = new ChessClock(ClockMode.COMPETITION);
 	    menuBar.prefWidthProperty().bind(primaryStage.widthProperty());
 	    root.setTop(menuBar);
 	    
@@ -105,23 +108,9 @@ public class ChessMate extends Application {
 			pieces[j+8].setImage(images[3]);
 			pieces[j+16].setImage(images[9]);
 		}
-		pieces[0].setImage(images[5]);
-		pieces[7].setImage(images[5]);
-		pieces[1].setImage(images[2]);
-		pieces[6].setImage(images[2]);
-		pieces[2].setImage(images[0]);
-		pieces[5].setImage(images[0]);
-		pieces[3].setImage(images[4]);
-		pieces[4].setImage(images[1]);
+	
 		
-		pieces[0+24].setImage(images[5+6]);
-		pieces[7+24].setImage(images[5+6]);
-		pieces[1+24].setImage(images[2+6]);
-		pieces[6+24].setImage(images[2+6]);
-		pieces[2+24].setImage(images[0+6]);
-		pieces[5+24].setImage(images[0+6]);
-		pieces[3+24].setImage(images[4+6]);
-		pieces[4+24].setImage(images[1+6]);
+		setUpPieces(pieces, images);
 		
 		char start = 'a';
 		for(int a = 0; a < 10; a++) {
@@ -150,8 +139,22 @@ public class ChessMate extends Application {
 				
 				if( a > 0 && a < 9 && b > 0 && b < 9 && (a+b)%2 == 1) {
 					rec.setFill(Color.SLATEGRAY);
+					 rec.setOnMouseClicked(new EventHandler<MouseEvent>()
+				        {
+				            @Override
+				            public void handle(MouseEvent t) {
+				                rec.setFill(Color.RED);
+				            }
+				        });
 				}else if(a > 0 && a < 9 && b > 0 && b < 9){
 					rec.setFill(Color.WHITE);
+					rec.setOnMouseClicked(new EventHandler<MouseEvent>()
+			        {
+			            @Override
+			            public void handle(MouseEvent t) {
+			                rec.setFill(Color.RED);
+			            }
+			        });
 				}
 				else {
 					rec.setFill(Color.TRANSPARENT);
@@ -159,11 +162,13 @@ public class ChessMate extends Application {
 				if( b > 0 && b < 9 && a == 0) {
 					Text text = new Text(""+ (9-b));
 					pane.getChildren().add(text);
+					pane.setAlignment(Pos.CENTER_RIGHT);
 				}
 				if( a > 0 && a < 9 && b == 9) {
 					
 					Text text = new Text(""+ start++);
 					pane.getChildren().add(text);
+					pane.setAlignment(Pos.TOP_CENTER);
 				}
 				
 				pane.getChildren().addAll(rec);
@@ -197,6 +202,26 @@ public class ChessMate extends Application {
 		//movePiece(board, pieces[15], 4, 4);
 	}
 	
+	
+	public void setUpPieces(ImageView [] pieces, Image [] images) {
+		pieces[0].setImage(images[5]);
+		pieces[7].setImage(images[5]);
+		pieces[1].setImage(images[2]);
+		pieces[6].setImage(images[2]);
+		pieces[2].setImage(images[0]);
+		pieces[5].setImage(images[0]);
+		pieces[3].setImage(images[4]);
+		pieces[4].setImage(images[1]);
+		
+		pieces[0+24].setImage(images[5+6]);
+		pieces[7+24].setImage(images[5+6]);
+		pieces[1+24].setImage(images[2+6]);
+		pieces[6+24].setImage(images[2+6]);
+		pieces[2+24].setImage(images[0+6]);
+		pieces[5+24].setImage(images[0+6]);
+		pieces[3+24].setImage(images[4+6]);
+		pieces[4+24].setImage(images[1+6]);
+	}
 	
 	
 	public void movePiece(GridPane board, ImageView thisPiece, int toCol, int toRow) {

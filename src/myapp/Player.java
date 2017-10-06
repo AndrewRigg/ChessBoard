@@ -18,7 +18,7 @@ public class Player {
 		this.rank = rank;
 		minutes = (int) (time /60);
 		seconds = (int) (time %60);
-		timeDisplay = "" + minutes + ":" + seconds;
+		timeDisplay = "" + minutes + ":" + String.format("%02d", seconds);
 	}
 
 	public String getName() {
@@ -44,7 +44,6 @@ public class Player {
 	public void setType(PlayerType type) {
 		this.type = type;
 	}
-	
 }
 
 

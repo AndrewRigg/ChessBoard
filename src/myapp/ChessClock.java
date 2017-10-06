@@ -9,44 +9,42 @@ package myapp;
 
 public class ChessClock {
 
-
 	Player p1, p2;
 	boolean playerTurn = true;
+	boolean running = false;
 	
-	public ChessClock(ClockMode mode, double p1Time, double p2Time) {
-		
-		//every second update the display
+	public ChessClock(ClockMode mode) {
+		/**Update the display every second  */
+		p1 = new Player("Bob", PlayerType.HUMAN, 0, mode.getP2Time(), 5);
+		p2 = new Player("Parsimmons", PlayerType.CPU, 0, mode.getP1Time(), 5);
 		long start = System.currentTimeMillis();
-		
-		long end = System.currentTimeMillis();
-		if((end - start) == 1000){
+		//long end = System.currentTimeMillis();
+		//if((end - start) == 1000){
+		if(start%1000 == 0) {
 			if(playerTurn) {
 				updateClock(p1);
 			}else {
 				updateClock(p2);
 			}
+			playerTurn = !playerTurn;
 		}
-			
 	}	
 	
 	public void updateClock(Player player) {
-		p1.time--;
-		p1.minutes = (int) (p1.time /60);
-		p1.seconds = (int) (p1.time %60);
-		p1.timeDisplay = p1.minutes + ":" + p1.seconds;
-	}
-	
-	
+		player.time--;
+		player.minutes = (int) (player.time /60);
+		player.seconds = (int) (player.time %60);
+		player.timeDisplay = player.minutes + ":" + player.seconds;
+	}	
 }
 
 
-
-
 enum ClockMode {
+	
 	COMPETITION (25.0, 25.0), 
 	SPEED (5.0, 5.0), 
-	CUSTOM (0.0,0.0), 
-	OFF (0.0,0.0);
+	CUSTOM (0.0, 0.0), 
+	OFF (0.0, 0.0);
 	
 		private double p1Time, p2Time;
 		ClockMode(double p1Time, double p2Time){
