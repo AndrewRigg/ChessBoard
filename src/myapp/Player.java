@@ -6,19 +6,12 @@ public class Player {
 	String name;
 	String notes;
 	PlayerType type;
-	double time;
-	int timeAllowance;
-	int minutes;
-	int seconds;
-	String timeDisplay = "";
+	boolean playerTurn;
 	
-	public Player(String name, PlayerType type, int rank, double time, int timeAllowance) {
+	public Player(String name, PlayerType type, int rank) {
 		this.name = name;
 		this.type = type;
 		this.rank = rank;
-		minutes = (int) (time /60);
-		seconds = (int) (time %60);
-		timeDisplay = "" + minutes + ":" + String.format("%02d", seconds);
 	}
 
 	public String getName() {
@@ -44,7 +37,10 @@ public class Player {
 	public void setType(PlayerType type) {
 		this.type = type;
 	}
+	
+	public void setPlayerTurn(boolean playerTurn) {
+		this.playerTurn = playerTurn;
+	}
 }
-
 
 enum PlayerType {HUMAN, REMOTE, CPU, RECORDED};

@@ -1,68 +1,63 @@
 /**
- * This class controls the clock entity which will be 
- * physically represented on the board.  It could have several 
- * settings including being turned off.
+ * This class controls the clock entity which will be physically represented 
+ * on the board.  It will have several settings including being turned off.
  */
-
 
 package myapp;
 
-public class ChessClock {
+import java.util.Timer;
 
-	Player p1, p2;
-	boolean playerTurn = true;
-	boolean running = false;
+public class ChessClock{
+
+	ClockMode mode;
+	Player player;
+	int timeAllowance;
+	int minutes;
+	int seconds;
+	double time;
+	String timeDisplay = "";
+	Timer timer; 
 	
-	public ChessClock(ClockMode mode) {
-		/**Update the display every second  */
-		p1 = new Player("Bob", PlayerType.HUMAN, 0, mode.getP2Time(), 5);
-		p2 = new Player("Parsimmons", PlayerType.CPU, 0, mode.getP1Time(), 5);
-		long start = System.currentTimeMillis();
-		//long end = System.currentTimeMillis();
-		//if((end - start) == 1000){
-		if(start%1000 == 0) {
-			if(playerTurn) {
-				updateClock(p1);
-			}else {
-				updateClock(p2);
-			}
-			playerTurn = !playerTurn;
+	public ChessClock(ClockMode mode, Player player, int timeAllowance, double time) {
+		this.mode = mode;
+		this.player = player;
+		this.timeAllowance = timeAllowance;
+		if(time != 0) {
+			mode.setTime(time);
 		}
-	}	
-	
-	public void updateClock(Player player) {
-		player.time--;
-		player.minutes = (int) (player.time /60);
-		player.seconds = (int) (player.time %60);
-		player.timeDisplay = player.minutes + ":" + player.seconds;
-	}	
+		this.time = 60*mode.getTime();
+		System.out.println("time: " + this.time);
+		minutes = (int) (this.time / 60);
+		seconds = (int) (this.time % 60);
+		timeDisplay = "" + minutes + ":" + String.format("%02d", seconds);
+		timer = new Timer();
+		if(player.playerTurn) {
+			timer.schedule(new UpdateClock(this), 0, 1000);
+		}
+	}
 }
 
-
-enum ClockMode {
+enum ClockMode{
 	
-	COMPETITION (25.0, 25.0), 
-	SPEED (5.0, 5.0), 
-	CUSTOM (0.0, 0.0), 
-	OFF (0.0, 0.0);
+	COMPETITION (25.0), 
+	SPEED (5.0), 
+	CUSTOM (0.0), 
+	OFF (0.0);
 	
-		private double p1Time, p2Time;
-		ClockMode(double p1Time, double p2Time){
-			this.p1Time = p1Time;
-			this.p2Time = p2Time;
+		private double time;
+		ClockMode(double time){
+			this.time = time;
 		}
 		
-		public void setTime(double p1, double p2) {
-			p1Time = p1;
-			p2Time = p2;
+		public void setTime(double time) {
+			if (this == ClockMode.CUSTOM) {
+				this.time = time;
+			}else {
+				System.err.println("Cannot change the time parameter for this mode");
+			}
 		}
 		
-		public double getP1Time() {
-			return p1Time;
+		public double getTime() {
+			return time;
 		}
-		
-		public double getP2Time() {
-			return p2Time;
-		}
-		
 	};

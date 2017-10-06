@@ -31,12 +31,13 @@ public class ChessMate extends Application {
 	@Override
 	public void start(Stage primaryStage) {
 		
-		Player player1 = new Player("Player1", PlayerType.HUMAN, 0, 1500, 5); 
-		Player player2 = new Player("Player2", PlayerType.CPU, 0, 1500, 5);
+		Player player1 = new Player("Player1", PlayerType.HUMAN, 0); 
+		Player player2 = new Player("Player2", PlayerType.CPU, 0);
 		BorderPane root = new BorderPane();
 		GridPane board = new GridPane();
+		ChessClock clock1 = new ChessClock(ClockMode.SPEED, player1, 5, 18);
+		ChessClock clock2 = new ChessClock(ClockMode.SPEED, player2, 10, 20);
 		MenuBar menuBar = new MenuBar();
-		ChessClock clock = new ChessClock(ClockMode.COMPETITION);
 	    menuBar.prefWidthProperty().bind(primaryStage.widthProperty());
 	    root.setTop(menuBar);
 	    
@@ -121,7 +122,7 @@ public class ChessMate extends Application {
 				rec.setHeight(SQUARE_SIZE);		
 		
 				if(a == 0 && b == 0) {
-					Text text = new Text(""+ player1.name + ": " + player1.timeDisplay);
+					Text text = new Text(player1.name + ": " +clock1.timeDisplay);
 					text.setFont(Font.font ("Verdana", 20));
 					text.setFill(Color.RED);	
 					pane.getChildren().add(text);
@@ -129,7 +130,7 @@ public class ChessMate extends Application {
 				}
 				
 				if(a == 9 && b == 0) {
-					Text text = new Text(""+ player2.name + ": " + player2.timeDisplay);
+					Text text = new Text(player2.name + ": " + clock2.timeDisplay);
 					text.setFont(Font.font ("Verdana", 20));
 					text.setFill(Color.DARKGRAY);
 					pane.getChildren().add(text);
@@ -176,12 +177,8 @@ public class ChessMate extends Application {
 			}
 		}
 		
-		for(int i = 0; i < 8; i++) {
-			board.add(pieces[i], i+1, 1);
-			board.add(pieces[i+8], i+1, 2);
-			board.add(pieces[i+16], i+1, 7);
-			board.add(pieces[i+24], i+1, 8);
-		}
+		addPiecesToBoard(board, pieces);
+	
 		
 		
 		board.setStyle("-fx-background-color: #336699;");
@@ -212,7 +209,6 @@ public class ChessMate extends Application {
 		pieces[5].setImage(images[0]);
 		pieces[3].setImage(images[4]);
 		pieces[4].setImage(images[1]);
-		
 		pieces[0+24].setImage(images[5+6]);
 		pieces[7+24].setImage(images[5+6]);
 		pieces[1+24].setImage(images[2+6]);
@@ -223,6 +219,14 @@ public class ChessMate extends Application {
 		pieces[4+24].setImage(images[1+6]);
 	}
 	
+	public void addPiecesToBoard(GridPane board, ImageView [] pieces) {
+		for(int i = 0; i < 8; i++) {
+			board.add(pieces[i], i+1, 1);
+			board.add(pieces[i+8], i+1, 2);
+			board.add(pieces[i+16], i+1, 7);
+			board.add(pieces[i+24], i+1, 8);
+		}
+	}
 	
 	public void movePiece(GridPane board, ImageView thisPiece, int toCol, int toRow) {
 		board.getChildren().remove(thisPiece);
