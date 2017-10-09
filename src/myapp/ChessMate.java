@@ -37,23 +37,19 @@ public class ChessMate extends Application {
 	Player player1, player2;
 	ChessClock clock1, clock2;
 	BorderPane root;
-	public GridPane board;
 	MenuBar menuBar;
-	Menu fileMenu, compMenu, tutorialMenu;
+	Menu fileMenu, compMenu, tutorialMenu, webMenu;
 	MenuItem newMenuItem, saveMenuItem, exitMenuItem; 
 	CheckMenuItem p1MenuItem, p2MenuItem;
-	Menu webMenu;
-	ToggleGroup tGroup;
-	Image [] whiteImages;
-	Image [] blackImages;
-	ArrayList<ImageView> whitePieces, blackPieces;
-	ArrayList<ImageView> takenWhitePieces, takenBlackPieces;
-	ImageView currentPiece;
 	RadioMenuItem mycompItem, speedItem, customItem;
+	ToggleGroup tGroup;
+	Image [] whiteImages, blackImages;
+	ArrayList<ImageView> whitePieces, blackPieces, takenWhitePieces, takenBlackPieces;
+	ImageView currentPiece;
+	GridPane board;
 	boolean piecePicked, whiteTurn;
-	final int IMAGE_TYPES = 6;
-	final int SQUARE_SIZE = 80;
-	final int NUMBER_OF_PIECES = 16;
+	final int IMAGE_TYPES = 6, SQUARE_SIZE = 80, NUMBER_OF_PIECES = 16;
+	int [] indices = {5, 2, 0, 4, 1, 0, 2, 5};
 	
 	public ChessMate () {
 		player1 = new Player("Player1", PlayerType.HUMAN, 0); 
@@ -125,8 +121,8 @@ public class ChessMate extends Application {
 		setUpPieces(whitePieces, player1, takenWhitePieces);
 		setUpPieces(blackPieces, player2, takenBlackPieces);
 		
-		setUpImages(whitePieces, whiteImages);
-		setUpImages(blackPieces, blackImages);
+		setUpImages(whitePieces, whiteImages, indices);
+		setUpImages(blackPieces, blackImages, indices);
 		
 		char start = 'a';
 		piecePicked = false;
@@ -137,9 +133,7 @@ public class ChessMate extends Application {
 		        {
 		            @Override
 		            public void handle(MouseEvent t) {
-		            	
 		            	if(piecePicked) {
-		            		System.out.println("Current: " + currentPiece);
 		            		movePiece(board, currentPiece, GridPane.getColumnIndex(pane),  GridPane.getRowIndex(pane));
 		            		piecePicked = false;
 		            		swapTurns();
@@ -152,26 +146,19 @@ public class ChessMate extends Application {
 		
 				if(a == 0 && b == 0) {
 					pane.setAlignment(Pos.TOP_LEFT);
-					updateBoard(pane, player1, clock1);
+					//updateBoard(pane, player1, clock1);
 					pane.getChildren().add(updateClockOnBoard(player1, clock1));
 				}
 				
 				if(a == 9 && b == 0) {
 					pane.setAlignment(Pos.TOP_RIGHT);
-					updateBoard(pane, player2, clock2);
+					//updateBoard(pane, player2, clock2);
 					pane.getChildren().add(updateClockOnBoard(player2, clock2));
 				}
 				
+				createCheckerBoard(rec, a, b);
 				
-				if( a > 0 && a < 9 && b > 0 && b < 9 && (a+b)%2 == 1) {
-					rec.setFill(Color.SLATEGRAY);
-					
-				}else if(a > 0 && a < 9 && b > 0 && b < 9){
-					rec.setFill(Color.WHITE);
-				}
-				else {
-					rec.setFill(Color.TRANSPARENT);
-				}
+				
 				if( b > 0 && b < 9 && a == 0) {
 					Text text = new Text(""+ (9-b));
 					pane.getChildren().add(text);
@@ -207,14 +194,36 @@ public class ChessMate extends Application {
 		
 		//GamePlay game = new GamePlay();
 		System.out.println("chesses: " + board.getChildren().get(0));
-		updateBoard((StackPane)board.getChildren().get(0), player1, clock1);
-		
-		//example of how pieces can be moved
-		//movePiece(board, pieces[15], 4, 4);
+		//updateBoard((StackPane)board.getChildren().get(0), player1, clock1);
 	}
 	
+	/**
+	 * Create the black [*or grey] and white checkerboard in the standard 
+	 * chess configuration (i.e. black square bottom left corner).
+	 * @param rec
+	 * @param a
+	 * @param b
+	 */
+	public void createCheckerBoard(Rectangle rec, int a, int b) {
+		if( a > 0 && a < 9 && b > 0 && b < 9 && (a+b)%2 == 1) {
+			rec.setFill(Color.SLATEGRAY);
+			
+		}else if(a > 0 && a < 9 && b > 0 && b < 9){
+			rec.setFill(Color.WHITE);
+		}else {
+			rec.setFill(Color.TRANSPARENT);
+		}
+	}
+	
+	/**
+	 * Update the board clocks to display the latest count down and 
+	 * switch the active clock (i.e. change font colour).
+	 * @param player
+	 * @param clock
+	 * @return
+	 */
 	public Text updateClockOnBoard(Player player, ChessClock clock) {
-		Text text = new Text(player.name + ": " +clock.timeDisplay);
+		Text text = new Text(player.name + ": " + clock.timeDisplay);
 		text.setFont(Font.font ("Verdana", 20));
 		if(player.playerTurn){
 			text.setFill(Color.RED);
@@ -225,7 +234,8 @@ public class ChessMate extends Application {
 	}
 	
 	/**
-	 * Set up all the pieces which will fill the board
+	 * Set up all the pieces which will fill the board.  This includes
+	 * setting up all the events for each piece such as moves, removal etc.
 	 * @param pieces
 	 * @param player
 	 * @param takenPieces
@@ -243,12 +253,11 @@ public class ChessMate extends Application {
 	            	if(player.playerTurn) {
 		            	piecePicked = true;
 		            	currentPiece = pieces.get(innerI);
-		            	
-		            	//swapTurns();
 	            	}else {
 	            		if(piecePicked) {
-	            			//black piece picked and taking your white piece
 	            			takenPieces.add(pieces.get(innerI));
+	            			//pieces.remove(piece);
+	            			piecePicked = false;
 	            			swapTurns();
 	            			//pane.remove(pieces[innerI]);
 	            		}
@@ -259,12 +268,17 @@ public class ChessMate extends Application {
 		}
 	}
 	
-	
+	/**
+	 * Swap the boolean value determining whether it is that player's
+	 * turn and switch the clock which is counting down.
+	 */
 	public void swapTurns() {
 		player1.playerTurn = !player1.playerTurn;
 		player2.playerTurn = !player2.playerTurn;
 		clock1.update(player1.playerTurn);
 		clock2.update(player2.playerTurn);
+		updateClockOnBoard(player1, clock1);
+		updateClockOnBoard(player2, clock2);
 	}
 	
 	/**
@@ -272,22 +286,15 @@ public class ChessMate extends Application {
 	 * @param pieces
 	 * @param images
 	 */
-	public void setUpImages(ArrayList<ImageView> pieces, Image [] images) {
+	public void setUpImages(ArrayList<ImageView> pieces, Image [] images, int [] indices) {
 		for(int j = 0; j < 8; j++) {
 			pieces.get(j+8).setImage(images[3]);
+			pieces.get(j).setImage(images[indices[j]]);
 		}
-		pieces.get(0).setImage(images[5]);
-		pieces.get(7).setImage(images[5]);
-		pieces.get(1).setImage(images[2]);
-		pieces.get(6).setImage(images[2]);
-		pieces.get(2).setImage(images[0]);
-		pieces.get(5).setImage(images[0]);
-		pieces.get(3).setImage(images[4]);
-		pieces.get(4).setImage(images[1]);
 	}
 	
 	/**
-	 * 
+	 * Update timers on the board
 	 * @param pane
 	 * @param player
 	 * @param clock
