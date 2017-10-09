@@ -1,4 +1,4 @@
-/**
+/**@author Andrew
  * This class controls the clock entity which will be physically represented 
  * on the board.  It will have several settings including being turned off.
  */
@@ -9,16 +9,21 @@ import java.util.Timer;
 
 public class ChessClock{
 
+	ChessMate chess;
 	ClockMode mode;
 	Player player;
 	int timeAllowance;
-	int minutes;
-	int seconds;
-	double time;
+	public int minutes, seconds;
+	public double time;
 	String timeDisplay = "";
 	Timer timer; 
 	
-	public ChessClock(ClockMode mode, Player player, int timeAllowance, double time) {
+	public ChessClock(ChessMate board, ClockMode mode, Player player, int timeAllowance) {
+		this(board, mode, player, timeAllowance, 0);
+	}
+	
+	public ChessClock(ChessMate chess, ClockMode mode, Player player, int timeAllowance, double time) {
+		this.chess = chess;
 		this.mode = mode;
 		this.player = player;
 		this.timeAllowance = timeAllowance;
@@ -26,13 +31,20 @@ public class ChessClock{
 			mode.setTime(time);
 		}
 		this.time = 60*mode.getTime();
-		System.out.println("time: " + this.time);
 		minutes = (int) (this.time / 60);
 		seconds = (int) (this.time % 60);
 		timeDisplay = "" + minutes + ":" + String.format("%02d", seconds);
 		timer = new Timer();
-		if(player.playerTurn) {
-			timer.schedule(new UpdateClock(this), 0, 1000);
+		update(player.playerTurn);
+	}
+	
+	public void update(boolean playerTurn) {
+		if(playerTurn) {
+			//timer = new Timer();
+			timer.schedule(new UpdateClock(this, chess), 0, 1000);
+		}else {
+			timer.cancel();
+			timer = new Timer();
 		}
 	}
 }
@@ -51,6 +63,13 @@ enum ClockMode{
 		
 		public void setTime(double time) {
 			if (this == ClockMode.CUSTOM) {
+				if(time < 1) {
+					System.err.println("Cannot change the time parameter to this value");
+					time = 1;
+				}else if(time > 60) {
+					System.err.println("Cannot change the time parameter to this value");
+					time = 60;
+				}
 				this.time = time;
 			}else {
 				System.err.println("Cannot change the time parameter for this mode");

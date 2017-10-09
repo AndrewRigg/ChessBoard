@@ -1,4 +1,10 @@
+/**
+ * @author Andrew
+ * This is the main class for creating an instance of the chessboard.
+ */
 package myapp;
+
+import java.util.ArrayList;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -28,134 +34,140 @@ import javafx.scene.control.ToggleGroup;
 
 public class ChessMate extends Application {
 
-	@Override
-	public void start(Stage primaryStage) {
+	Player player1, player2;
+	ChessClock clock1, clock2;
+	BorderPane root;
+	public GridPane board;
+	MenuBar menuBar;
+	Menu fileMenu, compMenu, tutorialMenu;
+	MenuItem newMenuItem, saveMenuItem, exitMenuItem; 
+	CheckMenuItem p1MenuItem, p2MenuItem;
+	Menu webMenu;
+	ToggleGroup tGroup;
+	Image [] whiteImages;
+	Image [] blackImages;
+	ArrayList<ImageView> whitePieces, blackPieces;
+	ArrayList<ImageView> takenWhitePieces, takenBlackPieces;
+	ImageView currentPiece;
+	RadioMenuItem mycompItem, speedItem, customItem;
+	boolean piecePicked, whiteTurn;
+	final int IMAGE_TYPES = 6;
+	final int SQUARE_SIZE = 80;
+	final int NUMBER_OF_PIECES = 16;
+	
+	public ChessMate () {
+		player1 = new Player("Player1", PlayerType.HUMAN, 0); 
+		player1.playerTurn = true;
+		player2 = new Player("Player2", PlayerType.CPU, 0);
+		root = new BorderPane();
+		board = new GridPane();
+		clock1 = new ChessClock(this, ClockMode.CUSTOM, player1, 5, 10);
+		clock2 = new ChessClock(this, ClockMode.CUSTOM, player2, 10, 20); 
+		menuBar = new MenuBar();
+		fileMenu = new Menu("File");
+		compMenu = new Menu("Competition");
+		tutorialMenu = new Menu("Tutorial");
+		newMenuItem = new MenuItem("New");
+		saveMenuItem = new MenuItem("Save");
+		exitMenuItem = new MenuItem("Exit");
+		p1MenuItem = new CheckMenuItem("Player1");
+		p2MenuItem = new CheckMenuItem("Player2");
+		webMenu = new Menu("Clock");
+		tGroup = new ToggleGroup();
+		mycompItem = new RadioMenuItem("Competition");
+		speedItem = new RadioMenuItem("Speed");
+		customItem = new RadioMenuItem("Custom");
+		takenWhitePieces = new ArrayList<>();
+		takenBlackPieces = new ArrayList<>();
+		whiteImages = new Image [IMAGE_TYPES];
+		blackImages = new Image [IMAGE_TYPES];
+		whitePieces = new ArrayList<>();
+		blackPieces = new ArrayList<>();
+	}
+	
+
+	
+	public void start(Stage primaryStage) {		
 		
-		Player player1 = new Player("Player1", PlayerType.HUMAN, 0); 
-		Player player2 = new Player("Player2", PlayerType.CPU, 0);
-		BorderPane root = new BorderPane();
-		GridPane board = new GridPane();
-		ChessClock clock1 = new ChessClock(ClockMode.SPEED, player1, 5, 18);
-		ChessClock clock2 = new ChessClock(ClockMode.SPEED, player2, 10, 20);
-		MenuBar menuBar = new MenuBar();
 	    menuBar.prefWidthProperty().bind(primaryStage.widthProperty());
 	    root.setTop(menuBar);
-	    
-	    Menu fileMenu = new Menu("File");
-	    MenuItem newMenuItem = new MenuItem("New");
-	    MenuItem saveMenuItem = new MenuItem("Save");
-	    MenuItem exitMenuItem = new MenuItem("Exit");
 	    exitMenuItem.setOnAction(actionEvent -> Platform.exit());
-	    
-	    fileMenu.getItems().addAll(newMenuItem, saveMenuItem,
-	            new SeparatorMenuItem(), exitMenuItem);
-
-	        Menu webMenu = new Menu("Clock");
-	        CheckMenuItem p1MenuItem = new CheckMenuItem("Player1");
-	        p1MenuItem.setSelected(true);
-	        webMenu.getItems().add(p1MenuItem);
-	        CheckMenuItem p2MenuItem = new CheckMenuItem("Player2");
-	        p1MenuItem.setSelected(true);
-	        webMenu.getItems().add(p2MenuItem);
-
-	        Menu compMenu = new Menu("Competition");
-	        ToggleGroup tGroup = new ToggleGroup();
-	        RadioMenuItem mycompItem = new RadioMenuItem("Competition");
-	        mycompItem.setToggleGroup(tGroup);
-	        mycompItem.setSelected(true);
-
-	        RadioMenuItem speedItem = new RadioMenuItem("Speed");
-	        speedItem.setToggleGroup(tGroup);
-	        
-	        
-	        RadioMenuItem customItem = new RadioMenuItem("Custom");
-	        customItem.setToggleGroup(tGroup);
-
-	        compMenu.getItems().addAll(mycompItem, speedItem, customItem,
-	            new SeparatorMenuItem());
-
-	        Menu tutorialMenu = new Menu("Tutorial");
-	        tutorialMenu.getItems().addAll(
-	            new CheckMenuItem("Rules"),
-	            new CheckMenuItem("Matches"),
-	            new CheckMenuItem("Moves"));
-
-	        compMenu.getItems().add(tutorialMenu);
-
-	        menuBar.getMenus().addAll(fileMenu, webMenu, compMenu);
-	    
-	    
-		final int IMAGE_TYPES = 12;
-		final int SQUARE_SIZE = 80;
-		final int NUMBER_OF_PIECES = 32;
+	    fileMenu.getItems().addAll(newMenuItem, saveMenuItem, new SeparatorMenuItem(), exitMenuItem);
+        p1MenuItem.setSelected(true);
+        webMenu.getItems().add(p1MenuItem);
+        p1MenuItem.setSelected(true);
+        webMenu.getItems().add(p2MenuItem);
+        mycompItem.setToggleGroup(tGroup);
+        mycompItem.setSelected(true);
+        speedItem.setToggleGroup(tGroup);
+        customItem.setToggleGroup(tGroup);
+        compMenu.getItems().addAll(mycompItem, speedItem, customItem,
+        new SeparatorMenuItem());
+        tutorialMenu.getItems().addAll(
+        new CheckMenuItem("Rules"),
+        new CheckMenuItem("Matches"),
+        new CheckMenuItem("Moves"));
+        compMenu.getItems().add(tutorialMenu);
+        menuBar.getMenus().addAll(fileMenu, webMenu, compMenu);
+	
 		board.setPadding(new Insets(10));
 		board.setHgap(5);
 		board.setVgap(5);
-		String [] imageLocations = {"blackBishop.png", "blackKing.png", "blackKnight.png", "blackPawn.png", "blackQueen.png", "blackRook.png", 
-								   "whiteBishop.png", "whiteKing.png", "whiteKnight.png", "whitePawn.png", "whiteQueen.png", "whiteRook.png"};
-		Image [] images = new Image [IMAGE_TYPES];
-		ImageView [] pieces = new ImageView [NUMBER_OF_PIECES];
+		String [] imageLocations = {"Bishop.png", "King.png", "Knight.png", "Pawn.png", "Queen.png", "Rook.png"};
+		
 		
 		
 		for (int i = 0; i < IMAGE_TYPES; i++) {
-			images[i] = new Image("res/" + imageLocations[i]);
+			whiteImages[i] = new Image("res/" + "white" + imageLocations[i]);
+			blackImages[i] = new Image("res/" + "black" + imageLocations[i]);
 		}
-		for(int i = 0; i < NUMBER_OF_PIECES; i++) {
-			pieces[i] = new ImageView();
-			pieces[i].setFitWidth(SQUARE_SIZE);
-			pieces[i].setFitHeight(SQUARE_SIZE);
-		}
-		for(int j = 0; j < 8; j++) {
-			pieces[j+8].setImage(images[3]);
-			pieces[j+16].setImage(images[9]);
-		}
-	
 		
-		setUpPieces(pieces, images);
+		setUpPieces(whitePieces, player1, takenWhitePieces);
+		setUpPieces(blackPieces, player2, takenBlackPieces);
+		
+		setUpImages(whitePieces, whiteImages);
+		setUpImages(blackPieces, blackImages);
 		
 		char start = 'a';
+		piecePicked = false;
 		for(int a = 0; a < 10; a++) {
 			for(int b = 0; b < 10; b++) {
 				StackPane pane = new StackPane();
+				pane.setOnMouseClicked(new EventHandler<MouseEvent>()
+		        {
+		            @Override
+		            public void handle(MouseEvent t) {
+		            	
+		            	if(piecePicked) {
+		            		System.out.println("Current: " + currentPiece);
+		            		movePiece(board, currentPiece, GridPane.getColumnIndex(pane),  GridPane.getRowIndex(pane));
+		            		piecePicked = false;
+		            		swapTurns();
+		            	}
+		            }
+		        });
 				Rectangle rec = new Rectangle();
 				rec.setWidth(SQUARE_SIZE);
 				rec.setHeight(SQUARE_SIZE);		
 		
 				if(a == 0 && b == 0) {
-					Text text = new Text(player1.name + ": " +clock1.timeDisplay);
-					text.setFont(Font.font ("Verdana", 20));
-					text.setFill(Color.RED);	
-					pane.getChildren().add(text);
 					pane.setAlignment(Pos.TOP_LEFT);
+					updateBoard(pane, player1, clock1);
+					pane.getChildren().add(updateClockOnBoard(player1, clock1));
 				}
 				
 				if(a == 9 && b == 0) {
-					Text text = new Text(player2.name + ": " + clock2.timeDisplay);
-					text.setFont(Font.font ("Verdana", 20));
-					text.setFill(Color.DARKGRAY);
-					pane.getChildren().add(text);
 					pane.setAlignment(Pos.TOP_RIGHT);
+					updateBoard(pane, player2, clock2);
+					pane.getChildren().add(updateClockOnBoard(player2, clock2));
 				}
 				
 				
 				if( a > 0 && a < 9 && b > 0 && b < 9 && (a+b)%2 == 1) {
 					rec.setFill(Color.SLATEGRAY);
-					 rec.setOnMouseClicked(new EventHandler<MouseEvent>()
-				        {
-				            @Override
-				            public void handle(MouseEvent t) {
-				                rec.setFill(Color.RED);
-				            }
-				        });
+					
 				}else if(a > 0 && a < 9 && b > 0 && b < 9){
 					rec.setFill(Color.WHITE);
-					rec.setOnMouseClicked(new EventHandler<MouseEvent>()
-			        {
-			            @Override
-			            public void handle(MouseEvent t) {
-			                rec.setFill(Color.RED);
-			            }
-			        });
 				}
 				else {
 					rec.setFill(Color.TRANSPARENT);
@@ -177,9 +189,10 @@ public class ChessMate extends Application {
 			}
 		}
 		
-		addPiecesToBoard(board, pieces);
+		addPiecesToBoard(board, whitePieces, false);
+		addPiecesToBoard(board, blackPieces, true);
 	
-		
+		System.out.println("chesses: " + board.getChildren());
 		
 		board.setStyle("-fx-background-color: #336699;");
 		BorderPane p = new BorderPane();
@@ -192,48 +205,129 @@ public class ChessMate extends Application {
 		primaryStage.setTitle("ChessMate");
 		primaryStage.show();
 		
-		//ChessClock clock = new ChessClock();
-		GamePlay game = new GamePlay();
+		//GamePlay game = new GamePlay();
+		System.out.println("chesses: " + board.getChildren().get(0));
+		updateBoard((StackPane)board.getChildren().get(0), player1, clock1);
 		
 		//example of how pieces can be moved
 		//movePiece(board, pieces[15], 4, 4);
 	}
 	
-	
-	public void setUpPieces(ImageView [] pieces, Image [] images) {
-		pieces[0].setImage(images[5]);
-		pieces[7].setImage(images[5]);
-		pieces[1].setImage(images[2]);
-		pieces[6].setImage(images[2]);
-		pieces[2].setImage(images[0]);
-		pieces[5].setImage(images[0]);
-		pieces[3].setImage(images[4]);
-		pieces[4].setImage(images[1]);
-		pieces[0+24].setImage(images[5+6]);
-		pieces[7+24].setImage(images[5+6]);
-		pieces[1+24].setImage(images[2+6]);
-		pieces[6+24].setImage(images[2+6]);
-		pieces[2+24].setImage(images[0+6]);
-		pieces[5+24].setImage(images[0+6]);
-		pieces[3+24].setImage(images[4+6]);
-		pieces[4+24].setImage(images[1+6]);
+	public Text updateClockOnBoard(Player player, ChessClock clock) {
+		Text text = new Text(player.name + ": " +clock.timeDisplay);
+		text.setFont(Font.font ("Verdana", 20));
+		if(player.playerTurn){
+			text.setFill(Color.RED);
+		}else {
+			text.setFill(Color.BLACK);
+		}
+		return text;
 	}
 	
-	public void addPiecesToBoard(GridPane board, ImageView [] pieces) {
-		for(int i = 0; i < 8; i++) {
-			board.add(pieces[i], i+1, 1);
-			board.add(pieces[i+8], i+1, 2);
-			board.add(pieces[i+16], i+1, 7);
-			board.add(pieces[i+24], i+1, 8);
+	/**
+	 * Set up all the pieces which will fill the board
+	 * @param pieces
+	 * @param player
+	 * @param takenPieces
+	 */
+	public void setUpPieces(ArrayList<ImageView> pieces, Player player, ArrayList<ImageView> takenPieces) {
+		for(int i = 0; i < NUMBER_OF_PIECES; i++) {
+			ImageView piece = new ImageView();
+			piece.setFitWidth(SQUARE_SIZE);
+			piece.setFitHeight(SQUARE_SIZE);
+			final Integer innerI = new Integer(pieces.size());
+			piece.setOnMouseClicked(new EventHandler<MouseEvent>()
+	        {
+	            @Override
+	            public void handle(MouseEvent t) {
+	            	if(player.playerTurn) {
+		            	piecePicked = true;
+		            	currentPiece = pieces.get(innerI);
+		            	
+		            	//swapTurns();
+	            	}else {
+	            		if(piecePicked) {
+	            			//black piece picked and taking your white piece
+	            			takenPieces.add(pieces.get(innerI));
+	            			swapTurns();
+	            			//pane.remove(pieces[innerI]);
+	            		}
+	            	}
+	            }
+	        });
+			pieces.add(piece);
 		}
 	}
 	
+	
+	public void swapTurns() {
+		player1.playerTurn = !player1.playerTurn;
+		player2.playerTurn = !player2.playerTurn;
+		clock1.update(player1.playerTurn);
+		clock2.update(player2.playerTurn);
+	}
+	
+	/**
+	 * Set the associated images of the chess pieces 
+	 * @param pieces
+	 * @param images
+	 */
+	public void setUpImages(ArrayList<ImageView> pieces, Image [] images) {
+		for(int j = 0; j < 8; j++) {
+			pieces.get(j+8).setImage(images[3]);
+		}
+		pieces.get(0).setImage(images[5]);
+		pieces.get(7).setImage(images[5]);
+		pieces.get(1).setImage(images[2]);
+		pieces.get(6).setImage(images[2]);
+		pieces.get(2).setImage(images[0]);
+		pieces.get(5).setImage(images[0]);
+		pieces.get(3).setImage(images[4]);
+		pieces.get(4).setImage(images[1]);
+	}
+	
+	/**
+	 * 
+	 * @param pane
+	 * @param player
+	 * @param clock
+	 */
+	public void updateBoard(StackPane pane, Player player, ChessClock clock) {
+		pane.getChildren().add(updateClockOnBoard(player, clock));
+		System.out.println("Entered updateBoard");
+	}
+
+	
+	
+	/**
+	 * Add the ImageViews of chess pieces to the board
+	 * @param board
+	 * @param pieces
+	 */
+	public void addPiecesToBoard(GridPane board, ArrayList<ImageView> pieces, boolean black) {
+		for(int i = 0; i < 8; i++) {
+			if(black) {
+				board.add(pieces.get(i), i+1, 1);
+				board.add(pieces.get(i+8), i+1, 2);
+			}else {
+				board.add(pieces.get(i), i+1, 8);
+				board.add(pieces.get(i+8), i+1, 7);
+			}
+		}
+	}
+	
+	/**
+	 * Move a piece from one square to another by removing the
+	 * image from the first square and adding it to the next square.
+	 * @param board
+	 * @param thisPiece
+	 * @param toCol
+	 * @param toRow
+	 */
 	public void movePiece(GridPane board, ImageView thisPiece, int toCol, int toRow) {
 		board.getChildren().remove(thisPiece);
 		board.add(thisPiece, toCol, toRow);
 	}
-	
-	
 
 	public static void main(String[] args) {
 		launch(args);
