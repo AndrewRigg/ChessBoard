@@ -124,15 +124,15 @@ public class ChessMate extends Application {
 		board.setPadding(new Insets(10));
 		board.setHgap(5);
 		board.setVgap(5);
-		String [] imageLocations = {"Bishop.png", "King.png", "Knight.png", "Pawn.png", "Queen.png", "Rook.png"};
+		String [] imageLocations = {"Bishop", "King", "Knight", "Pawn", "Queen", "Rook"};
 
 		  
 		  
 		  
 		  
 		for (int i = 0; i < IMAGE_TYPES; i++) {
-			whiteImages[i] = new Image("res/" + "white" + imageLocations[i]);
-			blackImages[i] = new Image("res/" + "black" + imageLocations[i]);
+			whiteImages[i] = new Image("res/" + "white" + imageLocations[i] + ".png");
+			blackImages[i] = new Image("res/" + "black" + imageLocations[i] + ".png");
 			//speak(imageLocations[i].substring(0, imageLocations[i].length()-4));
 		}
 		
@@ -314,6 +314,13 @@ public class ChessMate extends Application {
 		for(int j = 0; j < 8; j++) {
 			pieces.get(j+8).setImage(images[3]);
 			pieces.get(j).setImage(images[indices[j]]);
+		}
+	}
+	
+	public void setUpPieces(ArrayList<Piece> pieces, ArrayList<ImageView> images) {
+		for(int i = 0; i < NUMBER_OF_PIECES; i++) {
+//			Piece piece = new Piece();
+//			pieces.add()
 		}
 	}
 	
