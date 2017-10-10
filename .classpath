@@ -2,5 +2,26 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
+	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/GitHub/TTS/gtranslateapi-1.0.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/GitHub/TTS/jl1.0.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/GitHub/TTS/freetts-1.2/bin/Client.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/GitHub/TTS/freetts-1.2/bin/EmacspeakServer.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/GitHub/TTS/freetts-1.2/bin/FreeTTSEmacspeakServer.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/GitHub/TTS/freetts-1.2/bin/FreeTTSHelloWorld.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/GitHub/TTS/freetts-1.2/bin/HelloWorld.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/GitHub/TTS/freetts-1.2/bin/JTime.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/GitHub/TTS/freetts-1.2/bin/MixedVoices.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/GitHub/TTS/freetts-1.2/bin/Player.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/GitHub/TTS/freetts-1.2/bin/Server.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/GitHub/TTS/freetts-1.2/bin/WebStartClock.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/GitHub/TTS/freetts-1.2/lib/cmu_time_awb.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/GitHub/TTS/freetts-1.2/lib/cmu_us_kal.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/GitHub/TTS/freetts-1.2/lib/cmudict04.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/GitHub/TTS/freetts-1.2/lib/cmulex.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/GitHub/TTS/freetts-1.2/lib/cmutimelex.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/GitHub/TTS/freetts-1.2/lib/en_us.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/GitHub/TTS/freetts-1.2/lib/freetts.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/GitHub/TTS/freetts-1.2/lib/freetts-jsapi10.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/GitHub/TTS/freetts-1.2/lib/mbrola.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

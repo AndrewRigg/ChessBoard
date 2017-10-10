@@ -8,8 +8,6 @@ package myapp;
 import java.util.Timer;
 
 public class ChessClock{
-
-	ChessMate chess;
 	ClockMode mode;
 	Player player;
 	int timeAllowance;
@@ -18,12 +16,11 @@ public class ChessClock{
 	String timeDisplay = "";
 	Timer timer; 
 	
-	public ChessClock(ChessMate board, ClockMode mode, Player player, int timeAllowance) {
-		this(board, mode, player, timeAllowance, 0);
+	public ChessClock(ClockMode mode, Player player, int timeAllowance) {
+		this(mode, player, timeAllowance, 0);
 	}
 	
-	public ChessClock(ChessMate chess, ClockMode mode, Player player, int timeAllowance, double time) {
-		this.chess = chess;
+	public ChessClock(ClockMode mode, Player player, int timeAllowance, double time) {
 		this.mode = mode;
 		this.player = player;
 		this.timeAllowance = timeAllowance;
@@ -35,13 +32,13 @@ public class ChessClock{
 		seconds = (int) (this.time % 60);
 		timeDisplay = "" + minutes + ":" + String.format("%02d", seconds);
 		timer = new Timer();
-		update(player.playerTurn);
+		update(player.playerTurn, time);
 	}
 	
-	public void update(boolean playerTurn) {
+	public void update(boolean playerTurn, double time) {
 		if(playerTurn) {
 			//timer = new Timer();
-			timer.schedule(new UpdateClock(this, chess), 0, 1000);
+			timer.schedule(new UpdateClock(this), 0, 1000);
 		}else {
 			timer.cancel();
 			timer = new Timer();

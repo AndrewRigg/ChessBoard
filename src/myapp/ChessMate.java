@@ -6,12 +6,22 @@ package myapp;
 
 import java.util.ArrayList;
 
+import com.sun.speech.freetts.Voice;
+import com.sun.speech.freetts.VoiceManager;
+
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.CheckMenuItem;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.RadioMenuItem;
+import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -24,13 +34,6 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
-import javafx.scene.control.CheckMenuItem;
-import javafx.scene.control.Menu;
-import javafx.scene.control.MenuBar;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.RadioMenuItem;
-import javafx.scene.control.SeparatorMenuItem;
-import javafx.scene.control.ToggleGroup;
 
 public class ChessMate extends Application {
 
@@ -45,20 +48,30 @@ public class ChessMate extends Application {
 	ToggleGroup tGroup;
 	Image [] whiteImages, blackImages;
 	ArrayList<ImageView> whitePieces, blackPieces, takenWhitePieces, takenBlackPieces;
+	ArrayList<Piece> white, black;
 	ImageView currentPiece;
+	int currentCol, currentRow;
 	GridPane board;
+	StackPane clockPane1, clockPane2;
 	boolean piecePicked, whiteTurn;
 	final int IMAGE_TYPES = 6, SQUARE_SIZE = 80, NUMBER_OF_PIECES = 16;
 	int [] indices = {5, 2, 0, 4, 1, 0, 2, 5};
+	String [] cols = {"A", "B", "C", "D", "E", "F", "G", "H"};
+	String [] rows = {"1", "2", "3", "4", "5", "6", "7", "8"};
+	private static final String VOICE = "kevin";
 	
+	/**
+	 * Constructor to initialise the chess board, players, clocks, menus
+	 * pieces, images and values.
+	 */
 	public ChessMate () {
 		player1 = new Player("Player1", PlayerType.HUMAN, 0); 
 		player1.playerTurn = true;
 		player2 = new Player("Player2", PlayerType.CPU, 0);
 		root = new BorderPane();
 		board = new GridPane();
-		clock1 = new ChessClock(this, ClockMode.CUSTOM, player1, 5, 10);
-		clock2 = new ChessClock(this, ClockMode.CUSTOM, player2, 10, 20); 
+		clock1 = new ChessClock(ClockMode.CUSTOM, player1, 5, 10);
+		clock2 = new ChessClock(ClockMode.CUSTOM, player2, 10, 20); 
 		menuBar = new MenuBar();
 		fileMenu = new Menu("File");
 		compMenu = new Menu("Competition");
@@ -79,6 +92,8 @@ public class ChessMate extends Application {
 		blackImages = new Image [IMAGE_TYPES];
 		whitePieces = new ArrayList<>();
 		blackPieces = new ArrayList<>();
+		white = new ArrayList<>();
+		black = new ArrayList<>();
 	}
 	
 
@@ -110,12 +125,15 @@ public class ChessMate extends Application {
 		board.setHgap(5);
 		board.setVgap(5);
 		String [] imageLocations = {"Bishop.png", "King.png", "Knight.png", "Pawn.png", "Queen.png", "Rook.png"};
-		
-		
-		
+
+		  
+		  
+		  
+		  
 		for (int i = 0; i < IMAGE_TYPES; i++) {
 			whiteImages[i] = new Image("res/" + "white" + imageLocations[i]);
 			blackImages[i] = new Image("res/" + "black" + imageLocations[i]);
+			//speak(imageLocations[i].substring(0, imageLocations[i].length()-4));
 		}
 		
 		setUpPieces(whitePieces, player1, takenWhitePieces);
@@ -134,8 +152,12 @@ public class ChessMate extends Application {
 		            @Override
 		            public void handle(MouseEvent t) {
 		            	if(piecePicked) {
-		            		movePiece(board, currentPiece, GridPane.getColumnIndex(pane),  GridPane.getRowIndex(pane));
+		            		int col = GridPane.getColumnIndex(pane);
+		            		int row = GridPane.getRowIndex(pane);
+		            		movePiece(board, currentPiece, col, row);
 		            		piecePicked = false;
+		            		String command = getStringCommand(currentPiece, currentCol, currentRow, col, row);
+		            		speak(command);
 		            		swapTurns();
 		            	}
 		            }
@@ -146,14 +168,16 @@ public class ChessMate extends Application {
 		
 				if(a == 0 && b == 0) {
 					pane.setAlignment(Pos.TOP_LEFT);
-					//updateBoard(pane, player1, clock1);
+					updateBoard(pane, player1, clock1);
 					pane.getChildren().add(updateClockOnBoard(player1, clock1));
+					//pane = clockPane1;
 				}
 				
 				if(a == 9 && b == 0) {
 					pane.setAlignment(Pos.TOP_RIGHT);
-					//updateBoard(pane, player2, clock2);
+					updateBoard(pane, player2, clock2);
 					pane.getChildren().add(updateClockOnBoard(player2, clock2));
+					//pane = clockPane2;
 				}
 				
 				createCheckerBoard(rec, a, b);
@@ -253,6 +277,8 @@ public class ChessMate extends Application {
 	            	if(player.playerTurn) {
 		            	piecePicked = true;
 		            	currentPiece = pieces.get(innerI);
+		            	currentCol = 2;
+		            	currentRow = 2;
 	            	}else {
 	            		if(piecePicked) {
 	            			takenPieces.add(pieces.get(innerI));
@@ -275,10 +301,8 @@ public class ChessMate extends Application {
 	public void swapTurns() {
 		player1.playerTurn = !player1.playerTurn;
 		player2.playerTurn = !player2.playerTurn;
-		clock1.update(player1.playerTurn);
-		clock2.update(player2.playerTurn);
-		updateClockOnBoard(player1, clock1);
-		updateClockOnBoard(player2, clock2);
+		clock1.update(player1.playerTurn, clock1.time);
+		clock2.update(player2.playerTurn, clock2.time);
 	}
 	
 	/**
@@ -300,7 +324,7 @@ public class ChessMate extends Application {
 	 * @param clock
 	 */
 	public void updateBoard(StackPane pane, Player player, ChessClock clock) {
-		pane.getChildren().add(updateClockOnBoard(player, clock));
+		updateClockOnBoard(player, clock);
 		System.out.println("Entered updateBoard");
 	}
 
@@ -335,7 +359,23 @@ public class ChessMate extends Application {
 		board.getChildren().remove(thisPiece);
 		board.add(thisPiece, toCol, toRow);
 	}
-
+	
+	public String getStringCommand(ImageView piece, int rowFrom, int colFrom, int rowTo, int colTo){
+		return (" from " + cols[rowFrom-1] + rows[8-colFrom] + " to " +  cols[rowTo-1] + rows[8-colTo]);
+	}
+	
+	/**
+	 * FreeTTS text-to-speech facility for reading out moves for CPU (and player).
+	 * 
+	 */
+	 public void speak(String text) {
+		  Voice voice;
+		  VoiceManager voiceManager = VoiceManager.getInstance();
+		  voice = voiceManager.getVoice(VOICE);
+		  voice.allocate();
+		  voice.speak(text);
+		 }
+	
 	public static void main(String[] args) {
 		launch(args);
 	}
