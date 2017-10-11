@@ -47,23 +47,26 @@ public class ChessMate extends Application {
 	RadioMenuItem mycompItem, speedItem, customItem;
 	ToggleGroup tGroup;
 	Image [] whiteImages, blackImages;
-	ArrayList<ImageView> whitePieces, blackPieces, takenWhitePieces, takenBlackPieces;
-	ArrayList<Piece> white, black;
+	ArrayList<ImageView> whiteImageViews, blackImageViews, takenWhitePieces, takenBlackPieces;
+	ArrayList<Piece> whitePieces, blackPieces;
 	ImageView currentPiece;
+	Piece current;
 	int currentCol, currentRow;
 	GridPane board;
 	StackPane clockPane1, clockPane2;
 	boolean piecePicked, whiteTurn;
-	final int IMAGE_TYPES = 6, SQUARE_SIZE = 80, NUMBER_OF_PIECES = 16;
+	final int IMAGE_TYPES = 6, SQUARE_SIZE = 60, NUMBER_OF_PIECES = 16;
 	int [] indices = {5, 2, 0, 4, 1, 0, 2, 5};
-	String [] cols = {"A", "B", "C", "D", "E", "F", "G", "H"};
-	String [] rows = {"1", "2", "3", "4", "5", "6", "7", "8"};
+	ArrayList<String> cols, rows;
 	private static final String VOICE = "kevin";
+	@SuppressWarnings("rawtypes")
+	ArrayList allArrays = new ArrayList<>();
 	
 	/**
 	 * Constructor to initialise the chess board, players, clocks, menus
 	 * pieces, images and values.
 	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public ChessMate () {
 		player1 = new Player("Player1", PlayerType.HUMAN, 0); 
 		player1.playerTurn = true;
@@ -90,13 +93,28 @@ public class ChessMate extends Application {
 		takenBlackPieces = new ArrayList<>();
 		whiteImages = new Image [IMAGE_TYPES];
 		blackImages = new Image [IMAGE_TYPES];
-		whitePieces = new ArrayList<>();
-		blackPieces = new ArrayList<>();
-		white = new ArrayList<>();
-		black = new ArrayList<>();
+//		whiteImageViews = new ArrayList<>();
+//		blackImageViews = new ArrayList<>();
+//		whitePieces = new ArrayList<>();
+//		blackPieces = new ArrayList<>();
+//		cols = new ArrayList<>();
+//		rows = new ArrayList<>();
+		allArrays.add(whiteImageViews);
+		for(Object array: allArrays){
+			initialiseArrays(array);
+		}
 	}
 	
-
+	/**
+	 * Test to initialise all arrays
+	 * @param args
+	 */
+@SuppressWarnings({ "unchecked", "unused", "rawtypes" })
+public void initialiseArrays(Object... args){
+	for(Object array: args){
+		array = new ArrayList<Object>();
+	}
+}
 	
 	public void start(Stage primaryStage) {		
 		
@@ -136,11 +154,11 @@ public class ChessMate extends Application {
 			//speak(imageLocations[i].substring(0, imageLocations[i].length()-4));
 		}
 		
-		setUpPieces(whitePieces, player1, takenWhitePieces);
-		setUpPieces(blackPieces, player2, takenBlackPieces);
+		setUpPieces(whiteImageViews, player1, takenWhitePieces);
+		setUpPieces(blackImageViews, player2, takenBlackPieces);
 		
-		setUpImages(whitePieces, whiteImages, indices);
-		setUpImages(blackPieces, blackImages, indices);
+		setUpImages(whiteImageViews, whiteImages, indices);
+		setUpImages(blackImageViews, blackImages, indices);
 		
 		char start = 'a';
 		piecePicked = false;
@@ -200,8 +218,8 @@ public class ChessMate extends Application {
 			}
 		}
 		
-		addPiecesToBoard(board, whitePieces, false);
-		addPiecesToBoard(board, blackPieces, true);
+		addPiecesToBoard(board, whiteImageViews, false);
+		addPiecesToBoard(board, blackImageViews, true);
 	
 		System.out.println("chesses: " + board.getChildren());
 		
