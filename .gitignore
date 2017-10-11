@@ -4,3 +4,6 @@ bin/myapp/ChessMate\$1\.class
 bin/myapp/ChessMate\$2\.class
 
 bin/myapp/ChessMate\.class
+*.class
+*.class
+bin/myapp/WordCommands.class
