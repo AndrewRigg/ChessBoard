@@ -49,6 +49,7 @@ public class ChessMate extends Application {
 	Image [] whiteImages, blackImages;
 	ArrayList<ImageView> whiteImageViews, blackImageViews, takenWhitePieces, takenBlackPieces;
 	ArrayList<Piece> whitePieces, blackPieces;
+	ArrayList<ArrayList<ImageView>> allArrays;
 	ImageView currentPiece;
 	Piece current;
 	int currentCol, currentRow;
@@ -57,16 +58,14 @@ public class ChessMate extends Application {
 	boolean piecePicked, whiteTurn;
 	final int IMAGE_TYPES = 6, SQUARE_SIZE = 60, NUMBER_OF_PIECES = 16;
 	int [] indices = {5, 2, 0, 4, 1, 0, 2, 5};
-	ArrayList<String> cols, rows;
+	ArrayList<Integer> rows;
+	ArrayList<Character> cols;
 	private static final String VOICE = "kevin";
-	@SuppressWarnings("rawtypes")
-	ArrayList allArrays = new ArrayList<>();
 	
 	/**
 	 * Constructor to initialise the chess board, players, clocks, menus
 	 * pieces, images and values.
 	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public ChessMate () {
 		player1 = new Player("Player1", PlayerType.HUMAN, 0); 
 		player1.playerTurn = true;
@@ -93,28 +92,17 @@ public class ChessMate extends Application {
 		takenBlackPieces = new ArrayList<>();
 		whiteImages = new Image [IMAGE_TYPES];
 		blackImages = new Image [IMAGE_TYPES];
-//		whiteImageViews = new ArrayList<>();
-//		blackImageViews = new ArrayList<>();
-//		whitePieces = new ArrayList<>();
-//		blackPieces = new ArrayList<>();
-//		cols = new ArrayList<>();
-//		rows = new ArrayList<>();
-		allArrays.add(whiteImageViews);
-		for(Object array: allArrays){
-			initialiseArrays(array);
+		whiteImageViews = new ArrayList<>();
+		blackImageViews = new ArrayList<>();
+		whitePieces = new ArrayList<>();
+		blackPieces = new ArrayList<>();
+		rows = new ArrayList<Integer>();
+		cols = new ArrayList<Character>();
+		for(int i = 1, a = 'A'; i <= 8; i ++, a++){
+			rows.add(i);
+			cols.add((char) a);
 		}
 	}
-	
-	/**
-	 * Test to initialise all arrays
-	 * @param args
-	 */
-@SuppressWarnings({ "unchecked", "unused", "rawtypes" })
-public void initialiseArrays(Object... args){
-	for(Object array: args){
-		array = new ArrayList<Object>();
-	}
-}
 	
 	public void start(Stage primaryStage) {		
 		
@@ -154,6 +142,7 @@ public void initialiseArrays(Object... args){
 			//speak(imageLocations[i].substring(0, imageLocations[i].length()-4));
 		}
 		
+		System.out.println("whiteImV: "+ whiteImageViews);
 		setUpPieces(whiteImageViews, player1, takenWhitePieces);
 		setUpPieces(blackImageViews, player2, takenBlackPieces);
 		
@@ -287,7 +276,7 @@ public void initialiseArrays(Object... args){
 			ImageView piece = new ImageView();
 			piece.setFitWidth(SQUARE_SIZE);
 			piece.setFitHeight(SQUARE_SIZE);
-			final Integer innerI = new Integer(pieces.size());
+			final Integer innerI = new Integer(i);
 			piece.setOnMouseClicked(new EventHandler<MouseEvent>()
 	        {
 	            @Override
@@ -334,13 +323,13 @@ public void initialiseArrays(Object... args){
 			pieces.get(j).setImage(images[indices[j]]);
 		}
 	}
-	
+	/*
 	public void setUpPieces(ArrayList<Piece> pieces, ArrayList<ImageView> images) {
 		for(int i = 0; i < NUMBER_OF_PIECES; i++) {
 //			Piece piece = new Piece();
 //			pieces.add()
 		}
-	}
+	}*/
 	
 	/**
 	 * Update timers on the board
@@ -385,8 +374,8 @@ public void initialiseArrays(Object... args){
 		board.add(thisPiece, toCol, toRow);
 	}
 	
-	public String getStringCommand(ImageView piece, int rowFrom, int colFrom, int rowTo, int colTo){
-		return (" from " + cols[rowFrom-1] + rows[8-colFrom] + " to " +  cols[rowTo-1] + rows[8-colTo]);
+	public String getStringCommand(ImageView piece,  int colFrom, int rowFrom,  int colTo, int rowTo){
+		return (" from " + rows.get(rowFrom-1) + cols.get(8-colFrom) + " to " +  cols.get(colTo-1) + rows.get(8-rowTo));
 	}
 	
 	/**
