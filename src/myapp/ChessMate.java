@@ -109,16 +109,15 @@ public class ChessMate extends Application {
 		board.setPadding(new Insets(10));
 		board.setHgap(5);
 		board.setVgap(5);	  
-		for (int i = 0; i < IMAGE_TYPES; i++) {
-			whiteImages[i] = new Image("res/" + "white" + imageLocations[i] + ".png");
-			blackImages[i] = new Image("res/" + "black" + imageLocations[i] + ".png");
-		}
+		
+		setUpImages(whiteImages, true);
+		setUpImages(blackImages, false);
 		
 		setUpImageViews(whiteImageViews, player1, takenWhitePieces);
 		setUpImageViews(blackImageViews, player2, takenBlackPieces);
 		
-		setUpImages(whiteImageViews, whiteImages, indices);
-		setUpImages(blackImageViews, blackImages, indices);
+		assignImages(whiteImageViews, whiteImages, indices);
+		assignImages(blackImageViews, blackImages, indices);
 		
 		setUpPieces(whitePieces, whiteImageViews, imageLocations, indices, true);
 		setUpPieces(blackPieces, blackImageViews, imageLocations, indices, false);
@@ -138,6 +137,17 @@ public class ChessMate extends Application {
 		primaryStage.setHeight(primaryScreenBounds.getHeight());
 		primaryStage.setTitle("ChessMate");
 		primaryStage.show(); 
+	}
+	
+	/**
+	 * Assign images based on name of pieces
+	 * @param images
+	 * @param isWhite
+	 */
+	public void setUpImages(Image [] images, boolean isWhite){
+		for (int i = 0; i < IMAGE_TYPES; i++) {
+			images[i] = new Image("res/" + ((isWhite) ? "white" : "black") + imageLocations[i] + ".png");
+		}
 	}
 	
 	/**
@@ -181,7 +191,7 @@ public class ChessMate extends Application {
 	 * @param pieces
 	 * @param images
 	 */
-	public void setUpImages(ArrayList<ImageView> imageViews, Image [] images, int [] indices) {
+	public void assignImages(ArrayList<ImageView> imageViews, Image [] images, int [] indices) {
 		for(int j = 0; j < 8; j++) {
 			imageViews.get(j+8).setImage(images[3]);
 			imageViews.get(j).setImage(images[indices[j]]);
@@ -189,7 +199,7 @@ public class ChessMate extends Application {
 	}
 	
 	/**
-	 * Set the piece objects to contain the coordinates, the image and the name of the piece
+	 * Set the chess piece objects to contain the coordinates, the image and the name of the piece
 	 * @param pieces
 	 * @param images
 	 * @param imageLocations
@@ -234,8 +244,8 @@ public class ChessMate extends Application {
 		            	}
 		            }
 		        });
-				Rectangle rec = new Rectangle(SQUARE_SIZE, SQUARE_SIZE);
-		
+				
+				//Add clock1 to top left of board
 				if(a == 0 && b == 0) {
 					pane.setAlignment(Pos.TOP_LEFT);
 					updateBoard(pane, player1, clock1);
@@ -243,15 +253,13 @@ public class ChessMate extends Application {
 					//pane = clockPane1;
 				}
 				
+				//Add clock2 to top right of board
 				if(a == 9 && b == 0) {
 					pane.setAlignment(Pos.TOP_RIGHT);
 					updateBoard(pane, player2, clock2);
-					pane.getChildren().add(updateClockOnBoard(player2, clock2));
+					//pane.getChildren().add(updateClockOnBoard(player2, clock2));
 					//pane = clockPane2;
 				}
-				
-				createCheckerBoard(rec, a, b);
-				
 				
 				if( b > 0 && b < 9 && a == 0) {
 					Text text = new Text(""+ (9-b));
@@ -265,7 +273,9 @@ public class ChessMate extends Application {
 					pane.setAlignment(Pos.TOP_CENTER);
 				}
 				
-				pane.getChildren().addAll(rec);
+				Rectangle rec = new Rectangle(SQUARE_SIZE, SQUARE_SIZE);
+				createCheckerBoard(rec, a, b);
+				pane.getChildren().add(rec);
 				board.add(pane, a, b);
 			}
 		}
