@@ -49,7 +49,6 @@ public class ChessMate extends Application {
 	Image [] whiteImages, blackImages;
 	ArrayList<ImageView> whiteImageViews, blackImageViews, takenWhitePieces, takenBlackPieces;
 	ArrayList<Piece> whitePieces, blackPieces;
-	ArrayList<ArrayList<ImageView>> allArrays;
 	ImageView currentPiece;
 	Piece current;
 	int currentCol, currentRow;
@@ -151,63 +150,7 @@ public class ChessMate extends Application {
 		setUpPieces(whitePieces, whiteImageViews, imageLocations, indices);
 		setUpPieces(blackPieces, blackImageViews, imageLocations, indices);
 		
-		char start = 'a';
-		piecePicked = false;
-		for(int a = 0; a < 10; a++) {
-			for(int b = 0; b < 10; b++) {
-				StackPane pane = new StackPane();
-				pane.setOnMouseClicked(new EventHandler<MouseEvent>()
-		        {
-		            @Override
-		            public void handle(MouseEvent t) {
-		            	if(piecePicked) {
-		            		int col = GridPane.getColumnIndex(pane);
-		            		int row = GridPane.getRowIndex(pane);
-		            		movePiece(board, currentPiece, col, row);
-		            		piecePicked = false;
-		            		String command = getStringCommand(currentPiece, currentCol, currentRow, col, row);
-		            		speak(command);
-		            		swapTurns();
-		            	}
-		            }
-		        });
-				Rectangle rec = new Rectangle();
-				rec.setWidth(SQUARE_SIZE);
-				rec.setHeight(SQUARE_SIZE);		
-		
-				if(a == 0 && b == 0) {
-					pane.setAlignment(Pos.TOP_LEFT);
-					updateBoard(pane, player1, clock1);
-					pane.getChildren().add(updateClockOnBoard(player1, clock1));
-					//pane = clockPane1;
-				}
-				
-				if(a == 9 && b == 0) {
-					pane.setAlignment(Pos.TOP_RIGHT);
-					updateBoard(pane, player2, clock2);
-					pane.getChildren().add(updateClockOnBoard(player2, clock2));
-					//pane = clockPane2;
-				}
-				
-				createCheckerBoard(rec, a, b);
-				
-				
-				if( b > 0 && b < 9 && a == 0) {
-					Text text = new Text(""+ (9-b));
-					pane.getChildren().add(text);
-					pane.setAlignment(Pos.CENTER_RIGHT);
-				}
-				if( a > 0 && a < 9 && b == 9) {
-					
-					Text text = new Text(""+ start++);
-					pane.getChildren().add(text);
-					pane.setAlignment(Pos.TOP_CENTER);
-				}
-				
-				pane.getChildren().addAll(rec);
-				board.add(pane, a, b);
-			}
-		}
+		setUpBoard();
 		
 		addPiecesToBoard(board, whiteImageViews, false);
 		addPiecesToBoard(board, blackImageViews, true);
@@ -304,17 +247,6 @@ public class ChessMate extends Application {
 	}
 	
 	/**
-	 * Swap the boolean value determining whether it is that player's
-	 * turn and switch the clock which is counting down.
-	 */
-	public void swapTurns() {
-		player1.playerTurn = !player1.playerTurn;
-		player2.playerTurn = !player2.playerTurn;
-		clock1.update(player1.playerTurn, clock1.time);
-		clock2.update(player2.playerTurn, clock2.time);
-	}
-	
-	/**
 	 * Set the associated images of the chess pieces 
 	 * @param pieces
 	 * @param images
@@ -326,6 +258,13 @@ public class ChessMate extends Application {
 		}
 	}
 	
+	/**
+	 * Set the piece objects to contain the coordinates, the image and the name of the piece
+	 * @param pieces
+	 * @param images
+	 * @param imageLocations
+	 * @param indices
+	 */
 	public void setUpPieces(ArrayList<Piece> pieces, ArrayList<ImageView> images, String [] imageLocations, int [] indices) {
 		for(int i = 0; i < NUMBER_OF_PIECES; i++) {
 			Piece piece;
@@ -334,9 +273,79 @@ public class ChessMate extends Application {
 			}else{
 				piece = new Piece(imageLocations[indices[i]], 0, 0, images.get(i));
 			}
-			System.out.println("piece:" + piece.getName());
 			pieces.add(piece);
 		}
+	}
+	
+	public void setUpBoard(){
+		char start = 'a';
+		piecePicked = false;
+		for(int a = 0; a < 10; a++) {
+			for(int b = 0; b < 10; b++) {
+				StackPane pane = new StackPane();
+				pane.setOnMouseClicked(new EventHandler<MouseEvent>()
+		        {
+		            @Override
+		            public void handle(MouseEvent t) {
+		            	if(piecePicked) {
+		            		int col = GridPane.getColumnIndex(pane);
+		            		int row = GridPane.getRowIndex(pane);
+		            		movePiece(board, currentPiece, col, row);
+		            		piecePicked = false;
+		            		String command = getStringCommand(currentPiece, currentCol, currentRow, col, row);
+		            		speak(command);
+		            		swapTurns();
+		            	}
+		            }
+		        });
+				Rectangle rec = new Rectangle();
+				rec.setWidth(SQUARE_SIZE);
+				rec.setHeight(SQUARE_SIZE);		
+		
+				if(a == 0 && b == 0) {
+					pane.setAlignment(Pos.TOP_LEFT);
+					updateBoard(pane, player1, clock1);
+					pane.getChildren().add(updateClockOnBoard(player1, clock1));
+					//pane = clockPane1;
+				}
+				
+				if(a == 9 && b == 0) {
+					pane.setAlignment(Pos.TOP_RIGHT);
+					updateBoard(pane, player2, clock2);
+					pane.getChildren().add(updateClockOnBoard(player2, clock2));
+					//pane = clockPane2;
+				}
+				
+				createCheckerBoard(rec, a, b);
+				
+				
+				if( b > 0 && b < 9 && a == 0) {
+					Text text = new Text(""+ (9-b));
+					pane.getChildren().add(text);
+					pane.setAlignment(Pos.CENTER_RIGHT);
+				}
+				if( a > 0 && a < 9 && b == 9) {
+					
+					Text text = new Text(""+ start++);
+					pane.getChildren().add(text);
+					pane.setAlignment(Pos.TOP_CENTER);
+				}
+				
+				pane.getChildren().addAll(rec);
+				board.add(pane, a, b);
+			}
+		}
+	}
+	
+	/**
+	 * Swap the boolean value determining whether it is that player's
+	 * turn and switch the clock which is counting down.
+	 */
+	public void swapTurns() {
+		player1.playerTurn = !player1.playerTurn;
+		player2.playerTurn = !player2.playerTurn;
+		clock1.update(player1.playerTurn, clock1.time);
+		clock2.update(player2.playerTurn, clock2.time);
 	}
 	
 	/**
@@ -377,11 +386,21 @@ public class ChessMate extends Application {
 	 * @param toCol
 	 * @param toRow
 	 */
-	public void movePiece(GridPane board, ImageView thisPiece, int toCol, int toRow) {
-		board.getChildren().remove(thisPiece);
-		board.add(thisPiece, toCol, toRow);
+	public void movePiece(GridPane board, ImageView piece, int toCol, int toRow) {
+		board.getChildren().remove(piece);
+		board.add(piece, toCol, toRow);
 	}
 	
+	/**
+	 * Set the string to be read out by the text-to-speech program
+	 * (this allows the CPU to let the player know what has been moved)
+	 * @param piece
+	 * @param colFrom
+	 * @param rowFrom
+	 * @param colTo
+	 * @param rowTo
+	 * @return
+	 */
 	public String getStringCommand(ImageView piece,  int colFrom, int rowFrom,  int colTo, int rowTo){
 		return (" from " + rows.get(rowFrom-1) + cols.get(8-colFrom) + " to " +  cols.get(colTo-1) + rows.get(8-rowTo));
 	}
