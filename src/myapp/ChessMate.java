@@ -1,6 +1,6 @@
 /**
- * @author Andrew
- * This is the main class for creating an instance of the chessboard.
+ * @author Andrew Rigg
+ * This is the main class for creating an instance of the chess board.
  */
 package myapp;
 
@@ -142,12 +142,14 @@ public class ChessMate extends Application {
 			//speak(imageLocations[i].substring(0, imageLocations[i].length()-4));
 		}
 		
-		System.out.println("whiteImV: "+ whiteImageViews);
-		setUpPieces(whiteImageViews, player1, takenWhitePieces);
-		setUpPieces(blackImageViews, player2, takenBlackPieces);
+		setUpImageViews(whiteImageViews, player1, takenWhitePieces);
+		setUpImageViews(blackImageViews, player2, takenBlackPieces);
 		
 		setUpImages(whiteImageViews, whiteImages, indices);
 		setUpImages(blackImageViews, blackImages, indices);
+		
+		setUpPieces(whitePieces, whiteImageViews, imageLocations, indices);
+		setUpPieces(blackPieces, blackImageViews, imageLocations, indices);
 		
 		char start = 'a';
 		piecePicked = false;
@@ -271,24 +273,24 @@ public class ChessMate extends Application {
 	 * @param player
 	 * @param takenPieces
 	 */
-	public void setUpPieces(ArrayList<ImageView> pieces, Player player, ArrayList<ImageView> takenPieces) {
+	public void setUpImageViews(ArrayList<ImageView> imageViews, Player player, ArrayList<ImageView> takenPieces) {
 		for(int i = 0; i < NUMBER_OF_PIECES; i++) {
-			ImageView piece = new ImageView();
-			piece.setFitWidth(SQUARE_SIZE);
-			piece.setFitHeight(SQUARE_SIZE);
+			ImageView imageView = new ImageView();
+			imageView.setFitWidth(SQUARE_SIZE);
+			imageView.setFitHeight(SQUARE_SIZE);
 			final Integer innerI = new Integer(i);
-			piece.setOnMouseClicked(new EventHandler<MouseEvent>()
+			imageView.setOnMouseClicked(new EventHandler<MouseEvent>()
 	        {
 	            @Override
 	            public void handle(MouseEvent t) {
 	            	if(player.playerTurn) {
 		            	piecePicked = true;
-		            	currentPiece = pieces.get(innerI);
+		            	currentPiece = imageViews.get(innerI);
 		            	currentCol = 2;
 		            	currentRow = 2;
 	            	}else {
 	            		if(piecePicked) {
-	            			takenPieces.add(pieces.get(innerI));
+	            			takenPieces.add(imageViews.get(innerI));
 	            			//pieces.remove(piece);
 	            			piecePicked = false;
 	            			swapTurns();
@@ -297,7 +299,7 @@ public class ChessMate extends Application {
 	            	}
 	            }
 	        });
-			pieces.add(piece);
+			imageViews.add(imageView);
 		}
 	}
 	
@@ -317,19 +319,25 @@ public class ChessMate extends Application {
 	 * @param pieces
 	 * @param images
 	 */
-	public void setUpImages(ArrayList<ImageView> pieces, Image [] images, int [] indices) {
+	public void setUpImages(ArrayList<ImageView> imageViews, Image [] images, int [] indices) {
 		for(int j = 0; j < 8; j++) {
-			pieces.get(j+8).setImage(images[3]);
-			pieces.get(j).setImage(images[indices[j]]);
+			imageViews.get(j+8).setImage(images[3]);
+			imageViews.get(j).setImage(images[indices[j]]);
 		}
 	}
-	/*
-	public void setUpPieces(ArrayList<Piece> pieces, ArrayList<ImageView> images) {
+	
+	public void setUpPieces(ArrayList<Piece> pieces, ArrayList<ImageView> images, String [] imageLocations, int [] indices) {
 		for(int i = 0; i < NUMBER_OF_PIECES; i++) {
-//			Piece piece = new Piece();
-//			pieces.add()
+			Piece piece;
+			if(i > 7){
+				piece = new Piece(imageLocations[3], 0, 0, images.get(i));
+			}else{
+				piece = new Piece(imageLocations[indices[i]], 0, 0, images.get(i));
+			}
+			System.out.println("piece:" + piece.getName());
+			pieces.add(piece);
 		}
-	}*/
+	}
 	
 	/**
 	 * Update timers on the board

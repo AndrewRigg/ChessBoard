@@ -22,4 +22,14 @@ public class Piece {
 	public String getName() {
 		return name;
 	}
+	
+	//This might be needed if e.g. a pawn is promoted to a queen
+	public void setName(String name){
+		this.name = name;
+	}
+	
+	//As above
+	public void setImage(ImageView image){
+		this.image = image;
+	}
 }
