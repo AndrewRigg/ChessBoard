@@ -545,27 +545,42 @@ public class ChessMate extends Application {
 	  * @param row
 	  * @return
 	  */
-	 public ArrayList<ArrayList<Integer>> getValidMoves(Piece piece, int col, int row){
+	 public ArrayList<ArrayList<Integer>>getValidMoves(Piece piece, int col, int row){
 		 ArrayList<ArrayList<Integer>> validMoves = new ArrayList<>();
+		 int potentialCol;
+		 int potentialRow;
 		 switch (piece.type){
 		 	case "Pawn":
 		 		ArrayList<Integer> thisPawnMove = new ArrayList<>();
 		 		//Need to add diagonal taking, en passant and promoting
-		 		if(piece.isWhite){
-		 			thisPawnMove.add(col, row--);
-		 		}else{
-		 			thisPawnMove.add(col, row++);
+			 		if(piece.isWhite){
+			 			potentialCol = col;
+				 		potentialRow = row++;
+				 		if(checkInBounds(potentialCol, potentialRow)){
+				 			thisPawnMove.add(col, row--);
+				 		}
+			 		}else{
+			 			potentialCol = col;
+				 		potentialRow = row--;
+				 		if(checkInBounds(potentialCol, potentialRow)){
+				 			thisPawnMove.add(col, row++);
+				 		}
+			 		}
+			 		validMoves.add(thisPawnMove);
 		 		}
-		 		validMoves.add(thisPawnMove);
 		 		break;
 		 	case "Knight":
 		 		for(int i = -2; i <= 2; i ++){
 		 			for(int j = -2; j <= 2; j++){
 		 				if(Math.abs(j) != Math.abs(i) && i != 0 && j != 0){
 		 					//and if square at col+j, row+i is not out of bounds
-		 					ArrayList<Integer> thisKnightMove = new ArrayList<>();
-		 					thisKnightMove.add(col+j, row+i);
-		 					validMoves.add(thisKnightMove);
+		 					potentialCol = col+j;
+		 					potentialRow = row+i;
+		 					if(checkInBounds(potentialCol, potentialRow)){
+			 					ArrayList<Integer> thisKnightMove = new ArrayList<>();
+			 					thisKnightMove.add(col+j, row+i);
+			 					validMoves.add(thisKnightMove);
+		 					}
 		 				}
 		 			}
 		 		}
@@ -575,9 +590,13 @@ public class ChessMate extends Application {
 		 			for(int j = -1; j <= 1; j+=2){
 		 				for(int k = -1; k <= 1; k+=2){
 		 					ArrayList<Integer> thisBishopMove = new ArrayList<>();
-				 			thisBishopMove.add(col+= i*j);
-				 			thisBishopMove.add(row += i*k);
-				 			validMoves.add(thisBishopMove);
+		 					potentialCol = col+i*j;
+		 					potentialRow = row+i*k;
+		 					if(checkInBounds(potentialCol, potentialRow)){
+					 			thisBishopMove.add(col+= i*j);
+					 			thisBishopMove.add(row += i*k);
+					 			validMoves.add(thisBishopMove);
+		 					}
 		 				}
 		 			}
 		 			
@@ -589,10 +608,14 @@ public class ChessMate extends Application {
 		 			for(int j = -1; j <= 1; j++){
 		 				for(int k = -1; k <= 1; k++){
 		 					if(Math.abs(j) != Math.abs(k)){
-					 			ArrayList<Integer> thisRookMove = new ArrayList<>();
-					 			thisRookMove.add(col + j*i);
-					 			thisRookMove.add(row + k*i);
-					 			validMoves.add(thisRookMove);
+		 						potentialCol = col + j*i;
+		 						potentialRow = row + k*i;
+		 						if(checkInBounds(potentialCol, potentialRow)){
+						 			ArrayList<Integer> thisRookMove = new ArrayList<>();
+						 			thisRookMove.add(col + j*i);
+						 			thisRookMove.add(row + k*i);
+						 			validMoves.add(thisRookMove);
+		 						}
 		 					}
 		 				}
 		 			}
@@ -603,10 +626,14 @@ public class ChessMate extends Application {
 		 			for(int j = -1; j <= 1; j++){
 		 				for(int k = -1; k <= 1; k++){
 		 					if(!(j == 0 && k == 0)){
-			 					ArrayList<Integer> thisQueenMove = new ArrayList<>();
-			 					thisQueenMove.add(col + j*i);
-			 					thisQueenMove.add(row + k*i);
-			 					validMoves.add(thisQueenMove);
+		 						potentialCol = col+j*i;
+		 						potentialRow = row+k*i;
+		 						if(checkInBounds(potentialCol, potentialRow)){
+				 					ArrayList<Integer> thisQueenMove = new ArrayList<>();
+				 					thisQueenMove.add(col + j*i);
+				 					thisQueenMove.add(row + k*i);
+				 					validMoves.add(thisQueenMove);
+		 						}
 		 					}
 		 				}
 		 			}
@@ -621,10 +648,14 @@ public class ChessMate extends Application {
 	 			for(int j = -1; j <= 1; j++){
 	 				for(int k = -1; k <= 1; k++){
 	 					if(!(j == 0 && k == 0)){
-		 					ArrayList<Integer> thisKingMove = new ArrayList<>();
-		 					thisKingMove.add(col += j);
-		 					thisKingMove.add(row += k);
-		 					validMoves.add(thisKingMove);
+	 						potentialCol = col + j;
+	 						potentialRow = row + k;
+	 						if(checkInBounds(potentialCol, potentialRow)){
+			 					ArrayList<Integer> thisKingMove = new ArrayList<>();
+			 					thisKingMove.add(col += j);
+			 					thisKingMove.add(row += k);
+			 					validMoves.add(thisKingMove);
+	 						}
 	 					}
 	 				}
 	 			}
@@ -633,6 +664,15 @@ public class ChessMate extends Application {
 		 		break;
 		 }
 		return null;
+	 }
+	 
+	 public boolean checkInBounds(int potentialCol, int potentialRow){
+		 int lowerBound = 1, upperBound = 8;
+		 if(potentialCol >= lowerBound && potentialCol <= upperBound && potentialRow >= lowerBound && potentialRow <= upperBound){
+			 return true;
+		 }else{
+			 return false;
+		 }
 	 }
 	 
 	public static void main(String[] args) {
