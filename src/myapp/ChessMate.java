@@ -46,9 +46,9 @@ public class ChessMate extends Application {
 	final int IMAGE_TYPES = 6, SQUARE_SIZE = 50, NUMBER_OF_PIECES = 16;
 	int [] indices = {5, 2, 0, 4, 1, 0, 2, 5};
 	int [] takenWhiteCounts = {0,0,0,0,0}, takenBlackCounts = {0,0,0,0,0};
+	boolean [][] occupied = new boolean[8][8];
 	String [] imageLocations = {"Bishop", "King", "Knight", "Pawn", "Queen", "Rook"};	
 	private static final String VOICE = "kevin";
-	int currentCol, currentRow;
 	
 	/**
 	 * Constructor to initialise the chess board, players, clocks, menus
@@ -223,7 +223,6 @@ public class ChessMate extends Application {
 			}else{
 				piece = new Piece(colour + imageLocations[indices[i]], imageLocations[indices[i]], 0, 0, images.get(i), isWhite);
 			}
-			System.out.println("Piece: " + piece.getName());
 			pieces.add(piece);
 		}
 	}
@@ -239,31 +238,23 @@ public class ChessMate extends Application {
 				StackPane pane = new StackPane();
 				pane.setOnMouseClicked(new EventHandler<MouseEvent>()
 		        {
-		            @Override
-		            public void handle(MouseEvent t) {
-		            	if(piecePicked) {
-		            		
-		            		int col = GridPane.getColumnIndex(pane);
-		            		int row = GridPane.getRowIndex(pane);
-		            		movePiece(board, currentPiece, col, row);
-		            		//String command = getStringCommand(current, current.col, current.row, col, row);
-		            		current.col = col;
-		            		current.row = row;
-		            		//speak(command);
-		            		piecePicked = false;
-		            		swapTurns();
+	            @Override
+	            public void handle(MouseEvent t) {
+	            	int col = GridPane.getColumnIndex(pane);
+            		int row = GridPane.getRowIndex(pane);
+	            	if(piecePicked && !occupied[col][row]) {
+	            		occupied[col][row] = true;
+	            		movePiece(board, currentPiece, col, row);
+	            		//String command = getStringCommand(current, current.col, current.row, col, row);
+	            		//speak(command);
+	            		current.col = col;
+	            		current.row = row;
+	            		piecePicked = false;
+	            		swapTurns();
 		            	}
 		            }
 		        });
-				
-//				if(b == 0 || b == 11){
-//					if(a > 0 && a < 6){
-//						Text takenCount = new Text("0");
-//						pane.getChildren().add(takenCount);	
-//						pane.setAlignment(Pos.TOP_CENTER);
-//					}
-//				}
-				
+		
 				//Add clock1 to top left of board
 				if(a == 0 && b == 0) {
 					pane.setAlignment(Pos.TOP_LEFT);
@@ -312,17 +303,17 @@ public class ChessMate extends Application {
 			if(isWhite) {
 				board.add(images.get(i), i+1, 9);
 				board.add(images.get(i+8), i+1, 8);
-				pieces.get(i).col = i;
-				pieces.get(i).row = 8;
-				pieces.get(i+8).col = i;
-				pieces.get(i+8).row = 7;
+				pieces.get(i).col = i+1;
+				pieces.get(i).row = 9;
+				pieces.get(i+8).col = i+1;
+				pieces.get(i+8).row = 8;
 			}else {
 				board.add(images.get(i), i+1, 2);
 				board.add(images.get(i+8), i+1, 3);
-				pieces.get(i).col = i;
-				pieces.get(i).row = 1;
-				pieces.get(i+8).col = i;
-				pieces.get(i+8).row = 2;
+				pieces.get(i).col = i+1;
+				pieces.get(i).row = 2;
+				pieces.get(i+8).col = i+1;
+				pieces.get(i+8).row = 3;
 			}
 		}
 	}
@@ -397,12 +388,19 @@ public class ChessMate extends Application {
 		board.add(image, toCol, toRow);
 	}
 	
+	/**
+	 * Remove taken piece from the board and put in zone for that type
+	 * @param takenPiece
+	 */
 	public void removePiece(Piece takenPiece){
 		ObservableList<Node> children = board.getChildren();
 		int row = 0;
 		int col = 1;
 		Text count;
 		boolean addCounter = false;
+		if(takenPiece.type == "King"){
+			System.err.println("You cannot take the king!");
+		}
 		if(takenPiece.type == "Knight"){
 			col = 2;
 		}else if(takenPiece.type == "Bishop"){
@@ -435,9 +433,8 @@ public class ChessMate extends Application {
 				}
 			}
 		}
-		System.out.println(GridPane.getColumnIndex(takenPiece.image));
-		GridPane.getRowIndex(takenPiece.image);
 		movePiece(board, takenPiece.image, col, row);
+		takenPiece.taken = true;
 	}
 	
 	/**
@@ -466,6 +463,48 @@ public class ChessMate extends Application {
 		  voice.speak(text);
 		 }
 	
+	 /**
+	  * Return a string with the algebraic notation of the chess move which can be 
+	  * used to save, load or record a game
+	  * @param args
+	  */
+	 public String recordMove_algebraic_notation(Piece piece, int colFrom, int rowFrom, int colTo, int rowTo, 
+			 boolean capture, boolean ambiguousCol, boolean ambiguousRow, boolean ambiguousBoth){
+		 String move = "";
+		 //Could create method to determine if it will be ambiguous or not, this would 
+		 //require knowing all the potential squares which identical pieces can move to
+		 if(ambiguousRow){
+			 move += cols.get(colFrom);
+		 }else if(ambiguousCol){
+			 move += rows.get(rowFrom);
+		 }else if(ambiguousBoth){
+			 move += cols.get(colFrom) + rows.get(rowFrom);
+		 }
+		 move += piece.notation;
+		 if(capture){
+			 //If pawn taking then could be ambiguous as the piece could come from either side
+			 //likewise another type could have two pieces able to move to the desired square
+			 //so need a way of making the piece unambiguous
+			 //Here, two identical pieces could move to this square from the same row so
+			 //we need to prefix the move with the column of departure of the piece
+			 if(piece.type.equals("Pawn") || ambiguousRow){
+				 move += cols.get(colFrom);
+			 }else if(ambiguousCol){
+			 //Here, two identical pieces could move to this square from the same column so
+			 //we need to prefix the move with the row of departure of the piece
+				 move += rows.get(rowFrom);
+			 }else if(ambiguousBoth){
+			 //This case only occurs very rarely when at least one pawn has been promoted and so 
+			 //three or more identical pieces could move to the same square, thus both the row and 
+			 //column of departure must be prefixed
+				 move += cols.get(colFrom) + rows.get(rowFrom);
+			 }
+			 move += "x";
+		 }
+		 move += cols.get(colTo) + rows.get(rowTo);
+		 return move;
+	 }
+	 
 	public static void main(String[] args) {
 		launch(args);
 	}

@@ -10,6 +10,7 @@ public class Piece {
 	int row;
 	boolean taken;
 	boolean isWhite;
+	String notation = "";
 	
 	public Piece(String name, String type, int col, int row, ImageView image, boolean isWhite) {
 		this.image = image;
@@ -18,6 +19,11 @@ public class Piece {
 		this.col = col;
 		this.row = row;
 		this.isWhite = isWhite;
+		if(type.equals("Knight")){
+			notation = "N";
+		}else if (!type.equals("Pawn")){
+			notation = type.substring(0,1);
+		}
 	}
 	
 	public Piece(String name) {
