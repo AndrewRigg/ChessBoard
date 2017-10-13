@@ -7,8 +7,6 @@ package myapp;
 import java.io.*;
 import java.util.ArrayList;
 
-import javax.swing.GroupLayout.Alignment;
-
 import com.sun.speech.freetts.*;
 
 import javafx.application.*;
@@ -46,6 +44,7 @@ public class ChessMate extends Application {
 	GridPane board;
 	StackPane clockPane1, clockPane2;
 	boolean piecePicked, whiteTurn;
+	
 	final int IMAGE_TYPES = 6, SQUARE_SIZE = 55, NUMBER_OF_PIECES = 16;
 	int [] indices = {5, 2, 0, 4, 1, 0, 2, 5};
 	int [] takenWhiteCounts = {0,0,0,0,0}, takenBlackCounts = {0,0,0,0,0};
@@ -537,6 +536,103 @@ public class ChessMate extends Application {
 		    out.print("" + str);
 		 } catch (IOException e) {
 		 }
+	 }
+	 
+	 /**
+	  * Returns a list of all the potential squares which a given piece could move to
+	  * @param piece
+	  * @param col
+	  * @param row
+	  * @return
+	  */
+	 public ArrayList<ArrayList<Integer>> getValidMoves(Piece piece, int col, int row){
+		 ArrayList<ArrayList<Integer>> validMoves = new ArrayList<>();
+		 switch (piece.type){
+		 	case "Pawn":
+		 		ArrayList<Integer> thisPawnMove = new ArrayList<>();
+		 		//Need to add diagonal taking, en passant and promoting
+		 		if(piece.isWhite){
+		 			thisPawnMove.add(col, row--);
+		 		}else{
+		 			thisPawnMove.add(col, row++);
+		 		}
+		 		validMoves.add(thisPawnMove);
+		 		break;
+		 	case "Knight":
+		 		for(int i = -2; i <= 2; i ++){
+		 			for(int j = -2; j <= 2; j++){
+		 				if(Math.abs(j) != Math.abs(i) && i != 0 && j != 0){
+		 					//and if square at col+j, row+i is not out of bounds
+		 					ArrayList<Integer> thisKnightMove = new ArrayList<>();
+		 					thisKnightMove.add(col+j, row+i);
+		 					validMoves.add(thisKnightMove);
+		 				}
+		 			}
+		 		}
+		 		break;
+		 	case "Bishop":
+		 		for(int i = 1; i < 8; i++){
+		 			for(int j = -1; j <= 1; j+=2){
+		 				for(int k = -1; k <= 1; k+=2){
+		 					ArrayList<Integer> thisBishopMove = new ArrayList<>();
+				 			thisBishopMove.add(col+= i*j);
+				 			thisBishopMove.add(row += i*k);
+				 			validMoves.add(thisBishopMove);
+		 				}
+		 			}
+		 			
+		 		}
+		 		break;
+		 	case "Rook":
+		 		//Need to include castling but this will be activated by the king
+		 		for(int i = 1; i < 8; i++){
+		 			for(int j = -1; j <= 1; j++){
+		 				for(int k = -1; k <= 1; k++){
+		 					if(Math.abs(j) != Math.abs(k)){
+					 			ArrayList<Integer> thisRookMove = new ArrayList<>();
+					 			thisRookMove.add(col + j*i);
+					 			thisRookMove.add(row + k*i);
+					 			validMoves.add(thisRookMove);
+		 					}
+		 				}
+		 			}
+		 		}
+		 		break;
+		 	case "Queen":
+		 		for(int i = 1; i < 8; i++){
+		 			for(int j = -1; j <= 1; j++){
+		 				for(int k = -1; k <= 1; k++){
+		 					if(!(j == 0 && k == 0)){
+			 					ArrayList<Integer> thisQueenMove = new ArrayList<>();
+			 					thisQueenMove.add(col + j*i);
+			 					thisQueenMove.add(row + k*i);
+			 					validMoves.add(thisQueenMove);
+		 					}
+		 				}
+		 			}
+			 	}
+		 		break;
+		 	case "King":
+		 		//Have to deal with castling from here 
+		 		//Could have a boolean for whether castling is an option for each
+		 		//side which would include whether the two pieces are in the right places, 
+		 		//whether they have moved, if the squares in between are free, 
+		 		//and whether the move would put the King across check
+	 			for(int j = -1; j <= 1; j++){
+	 				for(int k = -1; k <= 1; k++){
+	 					if(!(j == 0 && k == 0)){
+		 					ArrayList<Integer> thisKingMove = new ArrayList<>();
+		 					thisKingMove.add(col += j);
+		 					thisKingMove.add(row += k);
+		 					validMoves.add(thisKingMove);
+	 					}
+	 				}
+	 			}
+		 		break;
+		 	default:
+		 		break;
+		 }
+		return null;
 	 }
 	 
 	public static void main(String[] args) {
