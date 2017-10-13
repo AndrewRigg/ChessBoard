@@ -3,18 +3,21 @@ import javafx.scene.image.ImageView;
 
 public class Piece {
 
+	ImageView image;
 	String name = "";
 	String type = "";
 	int col;
 	int row;
-	ImageView image;
+	boolean taken;
+	boolean isWhite;
 	
-	public Piece(String name, String type, int col, int row, ImageView image) {
+	public Piece(String name, String type, int col, int row, ImageView image, boolean isWhite) {
+		this.image = image;
 		this.name = name;
 		this.type = type;
 		this.col = col;
 		this.row = row;
-		this.image = image;
+		this.isWhite = isWhite;
 	}
 	
 	public Piece(String name) {
@@ -25,9 +28,17 @@ public class Piece {
 		return name;
 	}
 	
+	public void setTaken(boolean taken){
+		this.taken = taken;
+	}
+	
 	//This might be needed if e.g. a pawn is promoted to a queen
 	public void setName(String name){
 		this.name = name;
+	}
+	
+	public String getType(){
+		return type;
 	}
 	
 	//This might be needed if e.g. a pawn is promoted to a queen

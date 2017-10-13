@@ -33,7 +33,7 @@ public class ChessMate extends Application {
 	RadioMenuItem mycompItem, speedItem, customItem;
 	ToggleGroup tGroup;
 	Image [] whiteImages, blackImages;
-	ArrayList<ImageView> whiteImageViews, blackImageViews, takenWhitePieces, takenBlackPieces;
+	ArrayList<ImageView> whiteImageViews, blackImageViews;
 	ArrayList<Piece> whitePieces, blackPieces;
 	ArrayList<Integer> rows;
 	ArrayList<Character> cols;
@@ -44,6 +44,7 @@ public class ChessMate extends Application {
 	boolean piecePicked, whiteTurn;
 	final int IMAGE_TYPES = 6, SQUARE_SIZE = 60, NUMBER_OF_PIECES = 16;
 	int [] indices = {5, 2, 0, 4, 1, 0, 2, 5};
+	int [] takenWhiteCounts = {0,0,0,0,0}, takenBlackCounts = {0,0,0,0,0};
 	String [] imageLocations = {"Bishop", "King", "Knight", "Pawn", "Queen", "Rook"};	
 	private static final String VOICE = "kevin";
 	int currentCol, currentRow;
@@ -76,8 +77,6 @@ public class ChessMate extends Application {
 		customItem = new RadioMenuItem("Custom");
 		whiteImages = new Image [IMAGE_TYPES];
 		blackImages = new Image [IMAGE_TYPES];
-		takenWhitePieces = new ArrayList<>();
-		takenBlackPieces = new ArrayList<>();
 		whiteImageViews = new ArrayList<>();
 		blackImageViews = new ArrayList<>();
 		whitePieces = new ArrayList<>();
@@ -88,33 +87,33 @@ public class ChessMate extends Application {
 			rows.add(i);
 			cols.add((char) a);
 		}
-	}
-	
-	public void start(Stage primaryStage) {		
-	    menuBar.prefWidthProperty().bind(primaryStage.widthProperty());
-	    root.setTop(menuBar);
+		root.setTop(menuBar);
 	    exitMenuItem.setOnAction(actionEvent -> Platform.exit());
 	    fileMenu.getItems().addAll(newMenuItem, saveMenuItem, new SeparatorMenuItem(), exitMenuItem);
 	    tutorialMenu.getItems().addAll(new CheckMenuItem("Rules"), new CheckMenuItem("Matches"), new CheckMenuItem("Moves"));
 	    compMenu.getItems().add(tutorialMenu);
 	    webMenu.getItems().add(p1MenuItem);
 	    webMenu.getItems().add(p2MenuItem);
-	    compMenu.getItems().addAll(mycompItem, speedItem, customItem, new SeparatorMenuItem());
+	    compMenu.getItems().addAll(mycompItem, speedItem, customItem);
         p1MenuItem.setSelected(true);
         mycompItem.setToggleGroup(tGroup);
         mycompItem.setSelected(true);
         speedItem.setToggleGroup(tGroup);
         customItem.setToggleGroup(tGroup);
         menuBar.getMenus().addAll(fileMenu, compMenu, webMenu);
-		board.setPadding(new Insets(10));
+    	board.setPadding(new Insets(10));
 		board.setHgap(5);
-		board.setVgap(5);	  
-		
+		board.setVgap(5);	 
+	}
+	
+	public void start(Stage primaryStage) {		
+	    menuBar.prefWidthProperty().bind(primaryStage.widthProperty());
+	   
 		setUpImages(whiteImages, true);
 		setUpImages(blackImages, false);
 		
-		setUpImageViews(whiteImageViews, player1, takenWhitePieces);
-		setUpImageViews(blackImageViews, player2, takenBlackPieces);
+		setUpImageViews(whiteImageViews, whitePieces, player1);
+		setUpImageViews(blackImageViews, blackPieces, player2);
 		
 		assignImages(whiteImageViews, whiteImages, indices);
 		assignImages(blackImageViews, blackImages, indices);
@@ -124,8 +123,8 @@ public class ChessMate extends Application {
 		
 		setUpBoard();
 		
-		addPiecesToBoard(board, whiteImageViews, false);
-		addPiecesToBoard(board, blackImageViews, true);
+		addPiecesToBoard(board, whitePieces, whiteImageViews, true);
+		addPiecesToBoard(board, blackPieces, blackImageViews, false);
 			
 		board.setStyle("-fx-background-color: #336699;");
 		root.setCenter(board);
@@ -157,7 +156,7 @@ public class ChessMate extends Application {
 	 * @param player
 	 * @param takenPieces
 	 */
-	public void setUpImageViews(ArrayList<ImageView> imageViews, Player player, ArrayList<ImageView> takenPieces) {
+	public void setUpImageViews(ArrayList<ImageView> imageViews, ArrayList<Piece> pieces, Player player) {
 		for(int i = 0; i < NUMBER_OF_PIECES; i++) {
 			ImageView imageView = new ImageView();
 			imageView.setFitWidth(SQUARE_SIZE);
@@ -168,15 +167,19 @@ public class ChessMate extends Application {
 	            @Override
 	            public void handle(MouseEvent t) {
 	            	if(player.playerTurn) {
-		            	piecePicked = true;
 		            	currentPiece = imageViews.get(innerI);
-		            	//current = 
+		            	current = pieces.get(innerI);
+		            	piecePicked = true;
 	            	}else {
 	            		if(piecePicked) {
-	            			currentPiece = imageViews.get(innerI);
-	            			takenPieces.add(currentPiece);
-	            			imageViews.remove(currentPiece);
+	            			Piece piece = pieces.get(innerI);
+	            			//This breaks because once taken, there is a different number of pieces
+	            			//Possible solution add boolean token to Piece class for taken and get rid of taken arrays
 	            			piecePicked = false;
+	            			removePiece(piece);
+	            			movePiece(board, currentPiece, piece.col, piece.row);
+	            			current.col = piece.col;
+	            			current.row = piece.row;
 	            			swapTurns();
 	            		}
 	            	}
@@ -210,9 +213,13 @@ public class ChessMate extends Application {
 			Piece piece;
 			String colour = (isWhite) ? "White " : "Black ";
 			if(i > 7){
-				piece = new Piece(colour + imageLocations[3] + " " + (i - 7), imageLocations[3], 0, 0, images.get(i));
+				piece = new Piece(colour + imageLocations[3] + " " + (i - 7), imageLocations[3], 0, 0, images.get(i), isWhite);
+			}else if(i < 3){
+				piece = new Piece(colour + imageLocations[indices[i]] + "1", imageLocations[indices[i]], 0, 0, images.get(i), isWhite);
+			}else if(i > 5){
+				piece = new Piece(colour + imageLocations[indices[i]] + "2", imageLocations[indices[i]], 0, 0, images.get(i), isWhite);
 			}else{
-				piece = new Piece(colour + imageLocations[indices[i]], imageLocations[indices[i]], 0, 0, images.get(i));
+				piece = new Piece(colour + imageLocations[indices[i]], imageLocations[indices[i]], 0, 0, images.get(i), isWhite);
 			}
 			System.out.println("Piece: " + piece.getName());
 			pieces.add(piece);
@@ -225,25 +232,35 @@ public class ChessMate extends Application {
 	 */
 	public void setUpBoard(){
 		char start = 'a';
-		piecePicked = false;
 		for(int a = 0; a < 10; a++) {
-			for(int b = 0; b < 10; b++) {
+			for(int b = 0; b < 11; b++) {
 				StackPane pane = new StackPane();
 				pane.setOnMouseClicked(new EventHandler<MouseEvent>()
 		        {
 		            @Override
 		            public void handle(MouseEvent t) {
 		            	if(piecePicked) {
+		            		
 		            		int col = GridPane.getColumnIndex(pane);
 		            		int row = GridPane.getRowIndex(pane);
-		            		movePiece(board, current, currentPiece, col, row);
+		            		movePiece(board, currentPiece, col, row);
+		            		//String command = getStringCommand(current, current.col, current.row, col, row);
+		            		current.col = col;
+		            		current.row = row;
+		            		//speak(command);
 		            		piecePicked = false;
-		            		String command = getStringCommand(currentPiece, currentCol, currentRow, col, row);
-		            		speak(command);
 		            		swapTurns();
 		            	}
 		            }
 		        });
+				
+				if(b == 0 || b == 10){
+					if(a > 0 && a < 6){
+						Text takenCount = new Text("0");
+						pane.getChildren().add(takenCount);	
+						pane.setAlignment(Pos.TOP_CENTER);
+					}
+				}
 				
 				//Add clock1 to top left of board
 				if(a == 0 && b == 0) {
@@ -286,14 +303,22 @@ public class ChessMate extends Application {
 	 * @param board
 	 * @param pieces
 	 */
-	public void addPiecesToBoard(GridPane board, ArrayList<ImageView> pieces, boolean black) {
+	public void addPiecesToBoard(GridPane board, ArrayList<Piece> pieces, ArrayList<ImageView> images, boolean isWhite) {
 		for(int i = 0; i < 8; i++) {
-			if(black) {
-				board.add(pieces.get(i), i+1, 1);
-				board.add(pieces.get(i+8), i+1, 2);
+			if(isWhite) {
+				board.add(images.get(i), i+1, 8);
+				board.add(images.get(i+8), i+1, 7);
+				pieces.get(i).col = i;
+				pieces.get(i).row = 8;
+				pieces.get(i+8).col = i;
+				pieces.get(i+8).row = 7;
 			}else {
-				board.add(pieces.get(i), i+1, 8);
-				board.add(pieces.get(i+8), i+1, 7);
+				board.add(images.get(i), i+1, 1);
+				board.add(images.get(i+8), i+1, 2);
+				pieces.get(i).col = i;
+				pieces.get(i).row = 1;
+				pieces.get(i+8).col = i;
+				pieces.get(i+8).row = 2;
 			}
 		}
 	}
@@ -364,11 +389,30 @@ public class ChessMate extends Application {
 	 * @param toCol
 	 * @param toRow
 	 */
-	public void movePiece(GridPane board, Piece piece, ImageView image, int toCol, int toRow) {
+	public void movePiece(GridPane board, ImageView image, int toCol, int toRow) {
 		board.getChildren().remove(image);
 		board.add(image, toCol, toRow);
-		piece.col = toCol;
-		piece.row = toRow;
+	}
+	
+	public void removePiece(Piece takenPiece){
+		int row = 0;
+		int col = 1;
+		if(takenPiece.isWhite){
+			row = 10;
+		}
+		if(takenPiece.type == "Knight"){
+			col = 2;
+		}else if(takenPiece.type == "Bishop"){
+			col = 3;
+		}else if(takenPiece.type == "Rook"){
+			col = 4;
+		}else if(takenPiece.type == "Queen"){
+			col = 5;
+		}
+//		for(int i = 0; i < .length; i++){
+//			
+//		}
+		movePiece(board, takenPiece.image, col, row);
 	}
 	
 	/**
@@ -381,8 +425,8 @@ public class ChessMate extends Application {
 	 * @param rowTo
 	 * @return
 	 */
-	public String getStringCommand(ImageView piece,  int colFrom, int rowFrom,  int colTo, int rowTo){
-		return (" from " + rows.get(rowFrom-1) + cols.get(8-colFrom) + " to " +  cols.get(colTo-1) + rows.get(8-rowTo));
+	public String getStringCommand(Piece piece,  int colFrom, int rowFrom,  int colTo, int rowTo){
+		return (piece.getName() + " from " + cols.get(colFrom) + rows.get(8-rowFrom) + " to " +  cols.get(colTo-1) + rows.get(8-rowTo));
 	}
 	
 	/**
