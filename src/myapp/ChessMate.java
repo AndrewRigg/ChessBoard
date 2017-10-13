@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import com.sun.speech.freetts.*;
 
 import javafx.application.*;
+import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.geometry.*;
 import javafx.stage.*;
@@ -42,7 +43,7 @@ public class ChessMate extends Application {
 	GridPane board;
 	StackPane clockPane1, clockPane2;
 	boolean piecePicked, whiteTurn;
-	final int IMAGE_TYPES = 6, SQUARE_SIZE = 60, NUMBER_OF_PIECES = 16;
+	final int IMAGE_TYPES = 6, SQUARE_SIZE = 50, NUMBER_OF_PIECES = 16;
 	int [] indices = {5, 2, 0, 4, 1, 0, 2, 5};
 	int [] takenWhiteCounts = {0,0,0,0,0}, takenBlackCounts = {0,0,0,0,0};
 	String [] imageLocations = {"Bishop", "King", "Knight", "Pawn", "Queen", "Rook"};	
@@ -166,23 +167,24 @@ public class ChessMate extends Application {
 	        {
 	            @Override
 	            public void handle(MouseEvent t) {
-	            	if(player.playerTurn) {
-		            	currentPiece = imageViews.get(innerI);
-		            	current = pieces.get(innerI);
-		            	piecePicked = true;
-	            	}else {
-	            		if(piecePicked) {
-	            			Piece piece = pieces.get(innerI);
-	            			//This breaks because once taken, there is a different number of pieces
-	            			//Possible solution add boolean token to Piece class for taken and get rid of taken arrays
-	            			piecePicked = false;
-	            			removePiece(piece);
-	            			movePiece(board, currentPiece, piece.col, piece.row);
-	            			current.col = piece.col;
-	            			current.row = piece.row;
-	            			swapTurns();
-	            		}
-	            	}
+	            	if(!pieces.get(innerI).taken){
+		            	if(player.playerTurn) {
+			            	currentPiece = imageViews.get(innerI);
+			            	current = pieces.get(innerI);
+			            	piecePicked = true;
+		            	}else {
+		            		if(piecePicked) {
+		            			Piece piece = pieces.get(innerI);
+		            			piecePicked = false;
+		            			removePiece(piece);
+		            			movePiece(board, currentPiece, piece.col, piece.row);
+		            			piece.taken = true;
+		            			current.col = piece.col;
+		            			current.row = piece.row;
+		            			swapTurns();
+		            		}
+		            	}
+		            }
 	            }
 	        });
 			imageViews.add(imageView);
@@ -233,7 +235,7 @@ public class ChessMate extends Application {
 	public void setUpBoard(){
 		char start = 'a';
 		for(int a = 0; a < 10; a++) {
-			for(int b = 0; b < 11; b++) {
+			for(int b = 0; b < 13; b++) {
 				StackPane pane = new StackPane();
 				pane.setOnMouseClicked(new EventHandler<MouseEvent>()
 		        {
@@ -254,13 +256,13 @@ public class ChessMate extends Application {
 		            }
 		        });
 				
-				if(b == 0 || b == 10){
-					if(a > 0 && a < 6){
-						Text takenCount = new Text("0");
-						pane.getChildren().add(takenCount);	
-						pane.setAlignment(Pos.TOP_CENTER);
-					}
-				}
+//				if(b == 0 || b == 11){
+//					if(a > 0 && a < 6){
+//						Text takenCount = new Text("0");
+//						pane.getChildren().add(takenCount);	
+//						pane.setAlignment(Pos.TOP_CENTER);
+//					}
+//				}
 				
 				//Add clock1 to top left of board
 				if(a == 0 && b == 0) {
@@ -278,20 +280,22 @@ public class ChessMate extends Application {
 					//pane = clockPane2;
 				}
 				
-				if( b > 0 && b < 9 && a == 0) {
+				//Add row labels
+				if( b > 1 && b < 10 && a == 0) {
 					Text text = new Text(""+ (9-b));
 					pane.getChildren().add(text);
 					pane.setAlignment(Pos.CENTER_RIGHT);
 				}
-				if( a > 0 && a < 9 && b == 9) {
-					
+				
+				//Add column labels
+				if( a > 0 && a < 9 && b == 10) {
 					Text text = new Text(""+ start++);
 					pane.getChildren().add(text);
 					pane.setAlignment(Pos.TOP_CENTER);
 				}
 				
 				Rectangle rec = new Rectangle(SQUARE_SIZE, SQUARE_SIZE);
-				createCheckerBoard(rec, a, b);
+				createCheckerBoard(rec, a, b-1);
 				pane.getChildren().add(rec);
 				board.add(pane, a, b);
 			}
@@ -306,15 +310,15 @@ public class ChessMate extends Application {
 	public void addPiecesToBoard(GridPane board, ArrayList<Piece> pieces, ArrayList<ImageView> images, boolean isWhite) {
 		for(int i = 0; i < 8; i++) {
 			if(isWhite) {
-				board.add(images.get(i), i+1, 8);
-				board.add(images.get(i+8), i+1, 7);
+				board.add(images.get(i), i+1, 9);
+				board.add(images.get(i+8), i+1, 8);
 				pieces.get(i).col = i;
 				pieces.get(i).row = 8;
 				pieces.get(i+8).col = i;
 				pieces.get(i+8).row = 7;
 			}else {
-				board.add(images.get(i), i+1, 1);
-				board.add(images.get(i+8), i+1, 2);
+				board.add(images.get(i), i+1, 2);
+				board.add(images.get(i+8), i+1, 3);
 				pieces.get(i).col = i;
 				pieces.get(i).row = 1;
 				pieces.get(i+8).col = i;
@@ -378,7 +382,6 @@ public class ChessMate extends Application {
 	 */
 	public void updateBoard(StackPane pane, Player player, ChessClock clock) {
 		updateClockOnBoard(player, clock);
-		System.out.println("Entered updateBoard");
 	}
 	
 	/**
@@ -395,11 +398,11 @@ public class ChessMate extends Application {
 	}
 	
 	public void removePiece(Piece takenPiece){
+		ObservableList<Node> children = board.getChildren();
 		int row = 0;
 		int col = 1;
-		if(takenPiece.isWhite){
-			row = 10;
-		}
+		Text count;
+		boolean addCounter = false;
 		if(takenPiece.type == "Knight"){
 			col = 2;
 		}else if(takenPiece.type == "Bishop"){
@@ -409,9 +412,31 @@ public class ChessMate extends Application {
 		}else if(takenPiece.type == "Queen"){
 			col = 5;
 		}
-//		for(int i = 0; i < .length; i++){
-//			
-//		}
+		if(takenPiece.isWhite){
+			row = 11;
+			takenWhiteCounts[col-1]++;
+			count = new Text("x" + takenWhiteCounts[col-1]);
+			if(takenWhiteCounts[col-1] > 1){
+				addCounter = true;
+			}
+		}else{
+			takenBlackCounts[col-1]++;
+			count = new Text("x" + takenBlackCounts[col-1]);
+			if(takenBlackCounts[col-1] > 1){
+				addCounter = true;
+			}
+		}
+		if(addCounter){
+			for(Node node: children){
+				if(GridPane.getRowIndex(node) == row+1 && GridPane.getColumnIndex(node) == col){
+					((StackPane)node).getChildren().clear();
+					((StackPane)node).getChildren().add(count);
+					((StackPane)node).setAlignment(Pos.TOP_CENTER);
+				}
+			}
+		}
+		System.out.println(GridPane.getColumnIndex(takenPiece.image));
+		GridPane.getRowIndex(takenPiece.image);
 		movePiece(board, takenPiece.image, col, row);
 	}
 	
