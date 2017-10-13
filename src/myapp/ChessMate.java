@@ -4,7 +4,10 @@
  */
 package myapp;
 
+import java.io.*;
 import java.util.ArrayList;
+
+import javax.swing.GroupLayout.Alignment;
 
 import com.sun.speech.freetts.*;
 
@@ -43,10 +46,11 @@ public class ChessMate extends Application {
 	GridPane board;
 	StackPane clockPane1, clockPane2;
 	boolean piecePicked, whiteTurn;
-	final int IMAGE_TYPES = 6, SQUARE_SIZE = 50, NUMBER_OF_PIECES = 16;
+	final int IMAGE_TYPES = 6, SQUARE_SIZE = 55, NUMBER_OF_PIECES = 16;
 	int [] indices = {5, 2, 0, 4, 1, 0, 2, 5};
 	int [] takenWhiteCounts = {0,0,0,0,0}, takenBlackCounts = {0,0,0,0,0};
-	boolean [][] occupied = new boolean[8][8];
+	int lines = 1;
+	boolean [][] occupied = new boolean[12][10];
 	String [] imageLocations = {"Bishop", "King", "Knight", "Pawn", "Queen", "Rook"};	
 	private static final String VOICE = "kevin";
 	
@@ -84,7 +88,7 @@ public class ChessMate extends Application {
 		blackPieces = new ArrayList<>();
 		rows = new ArrayList<>();
 		cols = new ArrayList<>();
-		for(int i = 1, a = 'A'; i <= 8; i ++, a++){
+		for(int i = 1, a = 'a'; i <= 8; i ++, a++){
 			rows.add(i);
 			cols.add((char) a);
 		}
@@ -102,9 +106,10 @@ public class ChessMate extends Application {
         speedItem.setToggleGroup(tGroup);
         customItem.setToggleGroup(tGroup);
         menuBar.getMenus().addAll(fileMenu, compMenu, webMenu);
+        board.setAlignment(Pos.CENTER);
     	board.setPadding(new Insets(10));
-		board.setHgap(5);
-		board.setVgap(5);	 
+		board.setHgap(0);
+		board.setVgap(0);	 
 	}
 	
 	public void start(Stage primaryStage) {		
@@ -129,6 +134,7 @@ public class ChessMate extends Application {
 			
 		board.setStyle("-fx-background-color: #336699;");
 		root.setCenter(board);
+		BorderPane.setAlignment(board,Pos.CENTER);
 		Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
 		primaryStage.setScene(new Scene(root));
 		primaryStage.setX(primaryScreenBounds.getMinX());
@@ -178,6 +184,14 @@ public class ChessMate extends Application {
 		            			piecePicked = false;
 		            			removePiece(piece);
 		            			movePiece(board, currentPiece, piece.col, piece.row);
+		            			String str2 = " ";
+		            			String str = recordMove_algebraic_notation(current, current.col, current.row, piece.col, piece.row, true, false, false, false);
+		            			//String command = getStringCommand(current, current.col, current.row, piece.col, piece.row);
+			            		//speak(command);
+		            			if(!piece.isWhite){
+		            				str2 = "\r\n" + lines++ + ": ";
+		            			}
+		            			saveMovesToFile("" + str2 + str);
 		            			piece.taken = true;
 		            			current.col = piece.col;
 		            			current.row = piece.row;
@@ -236,24 +250,33 @@ public class ChessMate extends Application {
 		for(int a = 0; a < 10; a++) {
 			for(int b = 0; b < 13; b++) {
 				StackPane pane = new StackPane();
+				if(a > 0 && b > 1 && a < 9 && b < 9){
 				pane.setOnMouseClicked(new EventHandler<MouseEvent>()
 		        {
 	            @Override
 	            public void handle(MouseEvent t) {
 	            	int col = GridPane.getColumnIndex(pane);
             		int row = GridPane.getRowIndex(pane);
-	            	if(piecePicked && !occupied[col][row]) {
-	            		occupied[col][row] = true;
+	            	if(piecePicked && !occupied[row][col]) {
+	            		occupied[row][col] = true;
 	            		movePiece(board, currentPiece, col, row);
 	            		//String command = getStringCommand(current, current.col, current.row, col, row);
 	            		//speak(command);
-	            		current.col = col;
+            			String str2 = " ";
+            			String str = recordMove_algebraic_notation(current, current.col, current.row, col, row, false, false, false, false);
+            			System.out.println(str);
+            			if(!current.isWhite){
+            				str2 = "\r\n" + lines++ + ": ";
+            			}
+            			saveMovesToFile("" + str2 + str);
+            			current.col = col;
 	            		current.row = row;
 	            		piecePicked = false;
 	            		swapTurns();
 		            	}
 		            }
 		        });
+				}
 		
 				//Add clock1 to top left of board
 				if(a == 0 && b == 0) {
@@ -267,16 +290,17 @@ public class ChessMate extends Application {
 				if(a == 9 && b == 0) {
 					pane.setAlignment(Pos.TOP_RIGHT);
 					updateBoard(pane, player2, clock2);
-					//pane.getChildren().add(updateClockOnBoard(player2, clock2));
+					pane.getChildren().add(updateClockOnBoard(player2, clock2));
 					//pane = clockPane2;
 				}
 				
 				//Add row labels
 				if( b > 1 && b < 10 && a == 0) {
-					Text text = new Text(""+ (9-b));
+					Text text = new Text(""+ (10-b));
 					pane.getChildren().add(text);
 					pane.setAlignment(Pos.CENTER_RIGHT);
 				}
+				
 				
 				//Add column labels
 				if( a > 0 && a < 9 && b == 10) {
@@ -328,7 +352,6 @@ public class ChessMate extends Application {
 	public void createCheckerBoard(Rectangle rec, int a, int b) {
 		if( a > 0 && a < 9 && b > 0 && b < 9 && (a+b)%2 == 1) {
 			rec.setFill(Color.SLATEGRAY);
-			
 		}else if(a > 0 && a < 9 && b > 0 && b < 9){
 			rec.setFill(Color.WHITE);
 		}else {
@@ -448,7 +471,7 @@ public class ChessMate extends Application {
 	 * @return
 	 */
 	public String getStringCommand(Piece piece,  int colFrom, int rowFrom,  int colTo, int rowTo){
-		return (piece.getName() + " from " + cols.get(colFrom) + rows.get(8-rowFrom) + " to " +  cols.get(colTo-1) + rows.get(8-rowTo));
+		return (piece.getName() + " from " + cols.get(colFrom-1) + rows.get(9-rowFrom) + " to " +  cols.get(colTo-1) + rows.get(9-rowTo));
 	}
 	
 	/**
@@ -474,35 +497,46 @@ public class ChessMate extends Application {
 		 //Could create method to determine if it will be ambiguous or not, this would 
 		 //require knowing all the potential squares which identical pieces can move to
 		 if(ambiguousRow){
-			 move += cols.get(colFrom);
+			 move += cols.get(colFrom-1);
 		 }else if(ambiguousCol){
-			 move += rows.get(rowFrom);
+			 move += rows.get(9-rowFrom);
 		 }else if(ambiguousBoth){
-			 move += cols.get(colFrom) + rows.get(rowFrom);
+			 move += cols.get(colFrom-1) + rows.get(9-rowFrom);
 		 }
 		 move += piece.notation;
 		 if(capture){
-			 //If pawn taking then could be ambiguous as the piece could come from either side
-			 //likewise another type could have two pieces able to move to the desired square
-			 //so need a way of making the piece unambiguous
+			 //If pawn is capturing then we need a way of making the piece unambiguous
 			 //Here, two identical pieces could move to this square from the same row so
 			 //we need to prefix the move with the column of departure of the piece
 			 if(piece.type.equals("Pawn") || ambiguousRow){
-				 move += cols.get(colFrom);
+				 move += cols.get(colFrom-1);
 			 }else if(ambiguousCol){
 			 //Here, two identical pieces could move to this square from the same column so
 			 //we need to prefix the move with the row of departure of the piece
-				 move += rows.get(rowFrom);
+				 move += rows.get(9-rowFrom);
 			 }else if(ambiguousBoth){
 			 //This case only occurs very rarely when at least one pawn has been promoted and so 
 			 //three or more identical pieces could move to the same square, thus both the row and 
 			 //column of departure must be prefixed
-				 move += cols.get(colFrom) + rows.get(rowFrom);
+				 move += cols.get(colFrom-1) + rows.get(9-rowFrom);
 			 }
 			 move += "x";
 		 }
-		 move += cols.get(colTo) + rows.get(rowTo);
+		 move += "" + cols.get((colTo-1)) + rows.get(9-rowTo);
 		 return move;
+	 }
+	 
+	 /**
+	  * This method allows the moves to be recorded and stored in a .txt file
+	  */
+	 public void saveMovesToFile(String str){
+		 try(FileWriter fw = new FileWriter("GameFile.txt", true);
+		    BufferedWriter bw = new BufferedWriter(fw);
+		    PrintWriter out = new PrintWriter(bw))
+		 {
+		    out.print("" + str);
+		 } catch (IOException e) {
+		 }
 	 }
 	 
 	public static void main(String[] args) {
