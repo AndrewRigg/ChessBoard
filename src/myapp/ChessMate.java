@@ -567,7 +567,6 @@ public class ChessMate extends Application {
 				 		}
 			 		}
 			 		validMoves.add(thisPawnMove);
-		 		}
 		 		break;
 		 	case "Knight":
 		 		for(int i = -2; i <= 2; i ++){
@@ -663,7 +662,7 @@ public class ChessMate extends Application {
 		 	default:
 		 		break;
 		 }
-		return null;
+		return validMoves;
 	 }
 	 
 	 public boolean checkInBounds(int potentialCol, int potentialRow){
