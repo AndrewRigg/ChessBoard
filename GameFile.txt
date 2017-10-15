@@ -1,0 +1,66 @@
+
+1: a4 c5 Qxc5 e5
+2: Nf3
+3: Rxh1
+1: b4 c5
+1: d4 c5
+2: c4
+1: d2 e5
+2: e4
+3: Qxe4
+4: d4
+5: Qxd4
+1: c4 e5 Qxe5
+1: e4
+2: exe4
+1: d4 f6
+1: e3 fxd7
+1: Bxd7 cxd8
+1: e4 b5 Qxf8
+2: Bxb1
+3: Nf3
+4: Rxa2
+5: d3
+6: Kxe1
+1: c7
+1: d4
+2: Bxd4
+1: d4 d5
+2: f4
+3: Qxf4 Bxf4
+1: c4 e4
+1: d4 g5
+2: Ne4
+3: Qxe4
+1: c4 d5 cxd5
+1: b4 c5 bxc5 e5 Bxe5
+2: bxc5 Bxb8
+3: Qxb8
+4: Bg4 Qxc7 dxd7
+1: Bxd7 fxb7
+2: exb2 exe7 d5 Bxd5
+1: bxd5 Qxd5 exd7
+1: Nxd7 dxd7 Bf5 cxb7
+2: Bxd7 dxd7
+1: Bxd7 Nxa7 Bc5 Qxc5
+2: Nxe2
+1: e4 d5 Bxd5 f5
+2: Nc3 b5 Nxb5
+1: d4 b5
+1: e4 b5
+2: c3
+3: exe4
+4: c4
+1: d4 c5 dxc5
+2: dxc5
+3: e4
+4: Qxe4
+1: e4 b5
+2: c4 Rh5 Rxh5 Ra4 Bxa4 Bf5
+1: e4
+2: Qxe4 Bxe4 b5 Bxb5
+1: e4 fxd7 Qc5
+1: b4
+1: d4
+2: Qxd4 gxb7
+1: cxc2

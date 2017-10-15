@@ -1,39 +1,27 @@
 /**
- * @author Andrew
- * This is the main class for creating an instance of the chessboard.
+ * @author Andrew Rigg
+ * This is the main class for creating an instance of the chess board.
  */
 package myapp;
 
+import java.io.*;
 import java.util.ArrayList;
 
-import com.sun.speech.freetts.Voice;
-import com.sun.speech.freetts.VoiceManager;
+import com.sun.speech.freetts.*;
 
-import javafx.application.Application;
-import javafx.application.Platform;
+import javafx.application.*;
+import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.Scene;
-import javafx.scene.control.CheckMenuItem;
-import javafx.scene.control.Menu;
-import javafx.scene.control.MenuBar;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.RadioMenuItem;
-import javafx.scene.control.SeparatorMenuItem;
-import javafx.scene.control.ToggleGroup;
-import javafx.scene.effect.DropShadow;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
+import javafx.geometry.*;
+import javafx.stage.*;
+import javafx.scene.*;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.scene.text.*;
+import javafx.scene.image.*;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-import javafx.scene.text.Font;
-import javafx.scene.text.Text;
-import javafx.stage.Stage;
 
 public class ChessMate extends Application {
 
@@ -47,17 +35,22 @@ public class ChessMate extends Application {
 	RadioMenuItem mycompItem, speedItem, customItem;
 	ToggleGroup tGroup;
 	Image [] whiteImages, blackImages;
-	ArrayList<ImageView> whitePieces, blackPieces, takenWhitePieces, takenBlackPieces;
-	ArrayList<Piece> white, black;
+	ArrayList<ImageView> whiteImageViews, blackImageViews;
+	ArrayList<Piece> whitePieces, blackPieces;
+	ArrayList<Integer> rows;
+	ArrayList<Character> cols;
 	ImageView currentPiece;
-	int currentCol, currentRow;
+	Piece current;
 	GridPane board;
 	StackPane clockPane1, clockPane2;
 	boolean piecePicked, whiteTurn;
-	final int IMAGE_TYPES = 6, SQUARE_SIZE = 80, NUMBER_OF_PIECES = 16;
+	
+	final int IMAGE_TYPES = 6, SQUARE_SIZE = 55, NUMBER_OF_PIECES = 16;
 	int [] indices = {5, 2, 0, 4, 1, 0, 2, 5};
-	String [] cols = {"A", "B", "C", "D", "E", "F", "G", "H"};
-	String [] rows = {"1", "2", "3", "4", "5", "6", "7", "8"};
+	int [] takenWhiteCounts = {0,0,0,0,0}, takenBlackCounts = {0,0,0,0,0};
+	int lines;
+	boolean [][] occupied = new boolean[8][8];
+	String [] imageLocations = {"Bishop", "King", "Knight", "Pawn", "Queen", "Rook"};	
 	private static final String VOICE = "kevin";
 	
 	/**
@@ -65,9 +58,9 @@ public class ChessMate extends Application {
 	 * pieces, images and values.
 	 */
 	public ChessMate () {
-		player1 = new Player("Player1", PlayerType.HUMAN, 0); 
-		player1.playerTurn = true;
+		player1 = new Player("Player1", PlayerType.HUMAN, 0);
 		player2 = new Player("Player2", PlayerType.CPU, 0);
+		player1.playerTurn = true;
 		root = new BorderPane();
 		board = new GridPane();
 		clock1 = new ChessClock(ClockMode.CUSTOM, player1, 5, 10);
@@ -76,96 +69,238 @@ public class ChessMate extends Application {
 		fileMenu = new Menu("File");
 		compMenu = new Menu("Competition");
 		tutorialMenu = new Menu("Tutorial");
+		webMenu = new Menu("Clock");
 		newMenuItem = new MenuItem("New");
 		saveMenuItem = new MenuItem("Save");
 		exitMenuItem = new MenuItem("Exit");
 		p1MenuItem = new CheckMenuItem("Player1");
 		p2MenuItem = new CheckMenuItem("Player2");
-		webMenu = new Menu("Clock");
 		tGroup = new ToggleGroup();
 		mycompItem = new RadioMenuItem("Competition");
 		speedItem = new RadioMenuItem("Speed");
 		customItem = new RadioMenuItem("Custom");
-		takenWhitePieces = new ArrayList<>();
-		takenBlackPieces = new ArrayList<>();
 		whiteImages = new Image [IMAGE_TYPES];
 		blackImages = new Image [IMAGE_TYPES];
+		whiteImageViews = new ArrayList<>();
+		blackImageViews = new ArrayList<>();
 		whitePieces = new ArrayList<>();
 		blackPieces = new ArrayList<>();
-		white = new ArrayList<>();
-		black = new ArrayList<>();
-	}
-	
-
-	
-	public void start(Stage primaryStage) {		
-		
-	    menuBar.prefWidthProperty().bind(primaryStage.widthProperty());
-	    root.setTop(menuBar);
+		rows = new ArrayList<>();
+		cols = new ArrayList<>();
+		for(int i = 1, a = 'a'; i <= 8; i ++, a++){
+			rows.add(i);
+			cols.add((char) a);
+		}
+		root.setTop(menuBar);
 	    exitMenuItem.setOnAction(actionEvent -> Platform.exit());
 	    fileMenu.getItems().addAll(newMenuItem, saveMenuItem, new SeparatorMenuItem(), exitMenuItem);
+	    tutorialMenu.getItems().addAll(new CheckMenuItem("Rules"), new CheckMenuItem("Matches"), new CheckMenuItem("Moves"));
+	    compMenu.getItems().add(tutorialMenu);
+	    webMenu.getItems().add(p1MenuItem);
+	    webMenu.getItems().add(p2MenuItem);
+	    compMenu.getItems().addAll(mycompItem, speedItem, customItem);
         p1MenuItem.setSelected(true);
-        webMenu.getItems().add(p1MenuItem);
-        p1MenuItem.setSelected(true);
-        webMenu.getItems().add(p2MenuItem);
         mycompItem.setToggleGroup(tGroup);
         mycompItem.setSelected(true);
         speedItem.setToggleGroup(tGroup);
         customItem.setToggleGroup(tGroup);
-        compMenu.getItems().addAll(mycompItem, speedItem, customItem,
-        new SeparatorMenuItem());
-        tutorialMenu.getItems().addAll(
-        new CheckMenuItem("Rules"),
-        new CheckMenuItem("Matches"),
-        new CheckMenuItem("Moves"));
-        compMenu.getItems().add(tutorialMenu);
-        menuBar.getMenus().addAll(fileMenu, webMenu, compMenu);
+        menuBar.getMenus().addAll(fileMenu, compMenu, webMenu);
+        board.setAlignment(Pos.CENTER);
+    	board.setPadding(new Insets(10));
+		board.setHgap(0);
+		board.setVgap(0);	 
+		lines = 1;
+	}
 	
-		board.setPadding(new Insets(10));
-		board.setHgap(5);
-		board.setVgap(5);
-		String [] imageLocations = {"Bishop", "King", "Knight", "Pawn", "Queen", "Rook"};
-
-		  
-		  
-		  
-		  
+	public void start(Stage primaryStage) {		
+	    menuBar.prefWidthProperty().bind(primaryStage.widthProperty());
+	   
+	    setInitialOccupiedGrid();
+	    
+		setUpImages(whiteImages, true);
+		setUpImages(blackImages, false);
+		
+		setUpImageViews(whiteImageViews, whitePieces, player1);
+		setUpImageViews(blackImageViews, blackPieces, player2);
+		
+		assignImages(whiteImageViews, whiteImages, indices);
+		assignImages(blackImageViews, blackImages, indices);
+		
+		setUpPieces(whitePieces, whiteImageViews, imageLocations, indices, true);
+		setUpPieces(blackPieces, blackImageViews, imageLocations, indices, false);
+		
+		setUpBoard();
+		
+		addPiecesToBoard(board, whitePieces, whiteImageViews, true);
+		addPiecesToBoard(board, blackPieces, blackImageViews, false);
+			
+		board.setStyle("-fx-background-color: #336699;");
+		root.setCenter(board);
+		BorderPane.setAlignment(board,Pos.CENTER);
+		Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
+		primaryStage.setScene(new Scene(root));
+		primaryStage.setX(primaryScreenBounds.getMinX());
+		primaryStage.setY(primaryScreenBounds.getMinY());
+		primaryStage.setWidth(primaryScreenBounds.getWidth());
+		primaryStage.setHeight(primaryScreenBounds.getHeight());
+		primaryStage.setTitle("ChessMate");
+		primaryStage.show(); 
+	}
+	
+	/**
+	 * Assign images based on name of pieces
+	 * @param images
+	 * @param isWhite
+	 */
+	public void setUpImages(Image [] images, boolean isWhite){
 		for (int i = 0; i < IMAGE_TYPES; i++) {
-			whiteImages[i] = new Image("res/" + "white" + imageLocations[i] + ".png");
-			blackImages[i] = new Image("res/" + "black" + imageLocations[i] + ".png");
-			//speak(imageLocations[i].substring(0, imageLocations[i].length()-4));
+			images[i] = new Image("res/" + ((isWhite) ? "white" : "black") + imageLocations[i] + ".png");
 		}
-		
-		setUpPieces(whitePieces, player1, takenWhitePieces);
-		setUpPieces(blackPieces, player2, takenBlackPieces);
-		
-		setUpImages(whitePieces, whiteImages, indices);
-		setUpImages(blackPieces, blackImages, indices);
-		
+	}
+	
+	/**
+	 * Set up all the pieces which will fill the board.  This includes
+	 * setting up all the events for each piece such as moves, removal etc.
+	 * @param pieces
+	 * @param player
+	 * @param takenPieces
+	 */
+	public void setUpImageViews(ArrayList<ImageView> imageViews, ArrayList<Piece> pieces, Player player) {
+		for(int i = 0; i < NUMBER_OF_PIECES; i++) {
+			ImageView imageView = new ImageView();
+			imageView.setFitWidth(SQUARE_SIZE);
+			imageView.setFitHeight(SQUARE_SIZE);
+			final Integer innerI = new Integer(i);
+			imageView.setOnMouseClicked(new EventHandler<MouseEvent>()
+	        {
+	            @Override
+	            public void handle(MouseEvent t) {
+	            	if(!pieces.get(innerI).taken){
+		            	if(player.playerTurn) {
+			            	currentPiece = imageViews.get(innerI);
+			            	current = pieces.get(innerI);
+			            	ArrayList<ArrayList<Integer>> validMoves = getValidMoves(current, current.col, current.row);
+	            			System.out.println("Piece: " + current.getName());
+	            			showMovesOnBoard(validMoves);
+			            	piecePicked = true;
+		            	}else {
+		            		if(piecePicked) {
+		            			Piece piece = pieces.get(innerI);
+		            			piecePicked = false;
+		            			removePiece(piece);
+		            			occupied[current.row-2][current.col-1] = false;
+		            			movePiece(board, currentPiece, piece.col, piece.row);
+		            			String str2 = " ";
+		            			String str = recordMove_algebraic_notation(current, current.col, current.row, piece.col, piece.row, true, false, false, false);
+		            			String command = getStringCommand(current, current.col, current.row, piece.col, piece.row);
+			            		speak(command);
+		            			if(piece.isWhite){
+		            				str2 = "\r\n" + lines++ + ": ";
+		            			}
+		            			saveMovesToFile("" + str2 + str);
+		            			piece.taken = true;
+		            			current.col = piece.col;
+		            			current.row = piece.row;
+		            			swapTurns();
+		            			showOccupied();		            			
+		            		}
+		            	}
+		            }
+	            }
+	        });
+			imageViews.add(imageView);
+		}
+	}
+	
+	public void showOccupied(){
+		System.out.println("Occupied: ");
+		for(int i = 0; i < 8; i ++){
+			for(int j = 0; j < 8; j++){
+				if(occupied[i][j] == true){
+				System.out.print(1 + " ");
+				}else{
+					System.out.print(0 + " ");
+				}
+			}
+			System.out.print("\n");
+		}
+	}
+	
+	/**
+	 * Set the associated images of the chess pieces 
+	 * @param pieces
+	 * @param images
+	 */
+	public void assignImages(ArrayList<ImageView> imageViews, Image [] images, int [] indices) {
+		for(int j = 0; j < 8; j++) {
+			imageViews.get(j+8).setImage(images[3]);
+			imageViews.get(j).setImage(images[indices[j]]);
+		}
+	}
+	
+	/**
+	 * Set the chess piece objects to contain the coordinates, the image and the name of the piece
+	 * @param pieces
+	 * @param images
+	 * @param imageLocations
+	 * @param indices
+	 */
+	public void setUpPieces(ArrayList<Piece> pieces, ArrayList<ImageView> images, String [] imageLocations, int [] indices, boolean isWhite) {
+		for(int i = 0; i < NUMBER_OF_PIECES; i++) {
+			Piece piece;
+			String colour = (isWhite) ? "White " : "Black ";
+			if(i > 7){
+				piece = new Piece(colour + imageLocations[3] + " " + (i - 7), imageLocations[3], 0, 0, images.get(i), isWhite);
+			}else if(i < 3){
+				piece = new Piece(colour + imageLocations[indices[i]] + "1", imageLocations[indices[i]], 0, 0, images.get(i), isWhite);
+			}else if(i > 5){
+				piece = new Piece(colour + imageLocations[indices[i]] + "2", imageLocations[indices[i]], 0, 0, images.get(i), isWhite);
+			}else{
+				piece = new Piece(colour + imageLocations[indices[i]], imageLocations[indices[i]], 0, 0, images.get(i), isWhite);
+			}
+			pieces.add(piece);
+		}
+	}
+	
+	/**
+	 * Set up the board to have an 8x8 grid with a border 1 square thick,
+	 * stack panes and clock timers
+	 */
+	public void setUpBoard(){
 		char start = 'a';
-		piecePicked = false;
 		for(int a = 0; a < 10; a++) {
-			for(int b = 0; b < 10; b++) {
+			for(int b = 0; b < 13; b++) {
 				StackPane pane = new StackPane();
+				if(a > 0 && b > 1 && a < 9 && b < 9){
 				pane.setOnMouseClicked(new EventHandler<MouseEvent>()
 		        {
-		            @Override
-		            public void handle(MouseEvent t) {
-		            	if(piecePicked) {
-		            		int col = GridPane.getColumnIndex(pane);
-		            		int row = GridPane.getRowIndex(pane);
-		            		movePiece(board, currentPiece, col, row);
-		            		piecePicked = false;
-		            		String command = getStringCommand(currentPiece, currentCol, currentRow, col, row);
-		            		speak(command);
-		            		swapTurns();
+	            @Override
+	            public void handle(MouseEvent t) {
+	            	int col = GridPane.getColumnIndex(pane);
+            		int row = GridPane.getRowIndex(pane);
+	            	if(piecePicked && !occupied[row-2][col-1]) {
+	            		occupied[row-2][col-1] = true;
+	            		movePiece(board, currentPiece, col, row);
+	            		String command = getStringCommand(current, current.col, current.row, col, row);
+	            		speak(command);
+	            		occupied[current.row-2][current.col-1] = false;
+            			String str2 = " ";
+            			String str = recordMove_algebraic_notation(current, current.col, current.row, col, row, false, false, false, false);
+            			if(current.isWhite){
+            				str2 = "\r\n" + lines++ + ": ";
+            			}
+            			saveMovesToFile("" + str2 + str);
+            			current.col = col;
+	            		current.row = row;
+	            		piecePicked = false;
+	            		showOccupied();	
+	            		swapTurns();
 		            	}
 		            }
 		        });
-				Rectangle rec = new Rectangle();
-				rec.setWidth(SQUARE_SIZE);
-				rec.setHeight(SQUARE_SIZE);		
+				}
 		
+				//Add clock1 to top left of board
 				if(a == 0 && b == 0) {
 					pane.setAlignment(Pos.TOP_LEFT);
 					updateBoard(pane, player1, clock1);
@@ -173,6 +308,7 @@ public class ChessMate extends Application {
 					//pane = clockPane1;
 				}
 				
+				//Add clock2 to top right of board
 				if(a == 9 && b == 0) {
 					pane.setAlignment(Pos.TOP_RIGHT);
 					updateBoard(pane, player2, clock2);
@@ -180,45 +316,61 @@ public class ChessMate extends Application {
 					//pane = clockPane2;
 				}
 				
-				createCheckerBoard(rec, a, b);
-				
-				
-				if( b > 0 && b < 9 && a == 0) {
-					Text text = new Text(""+ (9-b));
+				//Add row labels
+				if( b > 1 && b < 10 && a == 0) {
+					Text text = new Text(""+ (10-b));
 					pane.getChildren().add(text);
 					pane.setAlignment(Pos.CENTER_RIGHT);
 				}
-				if( a > 0 && a < 9 && b == 9) {
-					
+				
+				
+				//Add column labels
+				if( a > 0 && a < 9 && b == 10) {
 					Text text = new Text(""+ start++);
 					pane.getChildren().add(text);
 					pane.setAlignment(Pos.TOP_CENTER);
 				}
 				
-				pane.getChildren().addAll(rec);
+				Rectangle rec = new Rectangle(SQUARE_SIZE, SQUARE_SIZE);
+				createCheckerBoard(rec, a, b-1);
+				pane.getChildren().add(rec);
 				board.add(pane, a, b);
 			}
 		}
-		
-		addPiecesToBoard(board, whitePieces, false);
-		addPiecesToBoard(board, blackPieces, true);
+	}
 	
-		System.out.println("chesses: " + board.getChildren());
-		
-		board.setStyle("-fx-background-color: #336699;");
-		BorderPane p = new BorderPane();
-		Text t = new Text("Hello FX");
-		t.setFont(Font.font("Arial", 60));
-		t.setEffect(new DropShadow());
-		p.setCenter(t);
-		root.setCenter(board);
-		primaryStage.setScene(new Scene(root));
-		primaryStage.setTitle("ChessMate");
-		primaryStage.show();
-		
-		//GamePlay game = new GamePlay();
-		System.out.println("chesses: " + board.getChildren().get(0));
-		//updateBoard((StackPane)board.getChildren().get(0), player1, clock1);
+	/**
+	 * Add the ImageViews of chess pieces to the board
+	 * @param board
+	 * @param pieces
+	 */
+	public void addPiecesToBoard(GridPane board, ArrayList<Piece> pieces, ArrayList<ImageView> images, boolean isWhite) {
+		for(int i = 0; i < 8; i++) {
+			if(isWhite) {
+				board.add(images.get(i), i+1, 9);
+				board.add(images.get(i+8), i+1, 8);
+				pieces.get(i).col = i+1;
+				pieces.get(i).row = 9;
+				pieces.get(i+8).col = i+1;
+				pieces.get(i+8).row = 8;
+			}else {
+				board.add(images.get(i), i+1, 2);
+				board.add(images.get(i+8), i+1, 3);
+				pieces.get(i).col = i+1;
+				pieces.get(i).row = 2;
+				pieces.get(i+8).col = i+1;
+				pieces.get(i+8).row = 3;
+			}
+		}
+	}
+	
+	public void setInitialOccupiedGrid(){
+		for(int j = 0; j < 8; j++){
+			occupied[0][j] = true;
+			occupied[1][j] = true;
+			occupied[6][j] = true;
+			occupied[7][j] = true;
+		}
 	}
 	
 	/**
@@ -231,7 +383,6 @@ public class ChessMate extends Application {
 	public void createCheckerBoard(Rectangle rec, int a, int b) {
 		if( a > 0 && a < 9 && b > 0 && b < 9 && (a+b)%2 == 1) {
 			rec.setFill(Color.SLATEGRAY);
-			
 		}else if(a > 0 && a < 9 && b > 0 && b < 9){
 			rec.setFill(Color.WHITE);
 		}else {
@@ -258,43 +409,6 @@ public class ChessMate extends Application {
 	}
 	
 	/**
-	 * Set up all the pieces which will fill the board.  This includes
-	 * setting up all the events for each piece such as moves, removal etc.
-	 * @param pieces
-	 * @param player
-	 * @param takenPieces
-	 */
-	public void setUpPieces(ArrayList<ImageView> pieces, Player player, ArrayList<ImageView> takenPieces) {
-		for(int i = 0; i < NUMBER_OF_PIECES; i++) {
-			ImageView piece = new ImageView();
-			piece.setFitWidth(SQUARE_SIZE);
-			piece.setFitHeight(SQUARE_SIZE);
-			final Integer innerI = new Integer(pieces.size());
-			piece.setOnMouseClicked(new EventHandler<MouseEvent>()
-	        {
-	            @Override
-	            public void handle(MouseEvent t) {
-	            	if(player.playerTurn) {
-		            	piecePicked = true;
-		            	currentPiece = pieces.get(innerI);
-		            	currentCol = 2;
-		            	currentRow = 2;
-	            	}else {
-	            		if(piecePicked) {
-	            			takenPieces.add(pieces.get(innerI));
-	            			//pieces.remove(piece);
-	            			piecePicked = false;
-	            			swapTurns();
-	            			//pane.remove(pieces[innerI]);
-	            		}
-	            	}
-	            }
-	        });
-			pieces.add(piece);
-		}
-	}
-	
-	/**
 	 * Swap the boolean value determining whether it is that player's
 	 * turn and switch the clock which is counting down.
 	 */
@@ -306,25 +420,6 @@ public class ChessMate extends Application {
 	}
 	
 	/**
-	 * Set the associated images of the chess pieces 
-	 * @param pieces
-	 * @param images
-	 */
-	public void setUpImages(ArrayList<ImageView> pieces, Image [] images, int [] indices) {
-		for(int j = 0; j < 8; j++) {
-			pieces.get(j+8).setImage(images[3]);
-			pieces.get(j).setImage(images[indices[j]]);
-		}
-	}
-	
-	public void setUpPieces(ArrayList<Piece> pieces, ArrayList<ImageView> images) {
-		for(int i = 0; i < NUMBER_OF_PIECES; i++) {
-//			Piece piece = new Piece();
-//			pieces.add()
-		}
-	}
-	
-	/**
 	 * Update timers on the board
 	 * @param pane
 	 * @param player
@@ -332,26 +427,6 @@ public class ChessMate extends Application {
 	 */
 	public void updateBoard(StackPane pane, Player player, ChessClock clock) {
 		updateClockOnBoard(player, clock);
-		System.out.println("Entered updateBoard");
-	}
-
-	
-	
-	/**
-	 * Add the ImageViews of chess pieces to the board
-	 * @param board
-	 * @param pieces
-	 */
-	public void addPiecesToBoard(GridPane board, ArrayList<ImageView> pieces, boolean black) {
-		for(int i = 0; i < 8; i++) {
-			if(black) {
-				board.add(pieces.get(i), i+1, 1);
-				board.add(pieces.get(i+8), i+1, 2);
-			}else {
-				board.add(pieces.get(i), i+1, 8);
-				board.add(pieces.get(i+8), i+1, 7);
-			}
-		}
 	}
 	
 	/**
@@ -362,13 +437,72 @@ public class ChessMate extends Application {
 	 * @param toCol
 	 * @param toRow
 	 */
-	public void movePiece(GridPane board, ImageView thisPiece, int toCol, int toRow) {
-		board.getChildren().remove(thisPiece);
-		board.add(thisPiece, toCol, toRow);
+	public void movePiece(GridPane board, ImageView image, int toCol, int toRow) {
+		board.getChildren().remove(image);
+		board.add(image, toCol, toRow);
 	}
 	
-	public String getStringCommand(ImageView piece, int rowFrom, int colFrom, int rowTo, int colTo){
-		return (" from " + cols[rowFrom-1] + rows[8-colFrom] + " to " +  cols[rowTo-1] + rows[8-colTo]);
+	/**
+	 * Remove taken piece from the board and put in zone for that type
+	 * @param takenPiece
+	 */
+	public void removePiece(Piece takenPiece){
+		ObservableList<Node> children = board.getChildren();
+		int row = 0;
+		int col = 1;
+		Text count;
+		boolean addCounter = false;
+		if(takenPiece.type == "King"){
+			System.err.println("You cannot take the king!");
+		}
+		if(takenPiece.type == "Knight"){
+			col = 2;
+		}else if(takenPiece.type == "Bishop"){
+			col = 3;
+		}else if(takenPiece.type == "Rook"){
+			col = 4;
+		}else if(takenPiece.type == "Queen"){
+			col = 5;
+		}
+		if(takenPiece.isWhite){
+			row = 11;
+			takenWhiteCounts[col-1]++;
+			count = new Text("x" + takenWhiteCounts[col-1]);
+			if(takenWhiteCounts[col-1] > 1){
+				addCounter = true;
+			}
+		}else{
+			takenBlackCounts[col-1]++;
+			count = new Text("x" + takenBlackCounts[col-1]);
+			if(takenBlackCounts[col-1] > 1){
+				addCounter = true;
+			}
+		}
+		if(addCounter){
+			for(Node node: children){
+				if(GridPane.getRowIndex(node) == row+1 && GridPane.getColumnIndex(node) == col){
+					((StackPane)node).getChildren().clear();
+					((StackPane)node).getChildren().add(count);
+					((StackPane)node).setAlignment(Pos.TOP_CENTER);
+				}
+			}
+		}
+		movePiece(board, takenPiece.image, col, row);
+		takenPiece.taken = true;
+	}
+	
+	/**
+	 * Set the string to be read out by the text-to-speech program
+	 * (this allows the CPU to let the player know what has been moved)
+	 * @param piece
+	 * @param colFrom
+	 * @param rowFrom
+	 * @param colTo
+	 * @param rowTo
+	 * @return
+	 */
+	public String getStringCommand(Piece piece,  int colFrom, int rowFrom,  int colTo, int rowTo){
+		return (piece.getType() + " from " + cols.get(colFrom-1) + rows.get(9-rowFrom) + " to " +  cols.get(colTo-1) + rows.get(9-rowTo));
 	}
 	
 	/**
@@ -383,6 +517,207 @@ public class ChessMate extends Application {
 		  voice.speak(text);
 		 }
 	
+	 /**
+	  * Return a string with the algebraic notation of the chess move which can be 
+	  * used to save, load or record a game
+	  * @param args
+	  */
+	 public String recordMove_algebraic_notation(Piece piece, int colFrom, int rowFrom, int colTo, int rowTo, 
+			 boolean capture, boolean ambiguousCol, boolean ambiguousRow, boolean ambiguousBoth){
+		 String move = "";
+		 //Could create method to determine if it will be ambiguous or not, this would 
+		 //require knowing all the potential squares which identical pieces can move to
+		 if(ambiguousRow){
+			 move += cols.get(colFrom-1);
+		 }else if(ambiguousCol){
+			 move += rows.get(9-rowFrom);
+		 }else if(ambiguousBoth){
+			 move += cols.get(colFrom-1) + rows.get(9-rowFrom);
+		 }
+		 move += piece.notation;
+		 if(capture){
+			 //If pawn is capturing then we need a way of making the piece unambiguous
+			 //Here, two identical pieces could move to this square from the same row so
+			 //we need to prefix the move with the column of departure of the piece
+			 if(piece.type.equals("Pawn") || ambiguousRow){
+				 move += cols.get(colFrom-1);
+			 }else if(ambiguousCol){
+			 //Here, two identical pieces could move to this square from the same column so
+			 //we need to prefix the move with the row of departure of the piece
+				 move += rows.get(9-rowFrom);
+			 }else if(ambiguousBoth){
+			 //This case only occurs very rarely when at least one pawn has been promoted and so 
+			 //three or more identical pieces could move to the same square, thus both the row and 
+			 //column of departure must be prefixed
+				 move += cols.get(colFrom-1) + rows.get(9-rowFrom);
+			 }
+			 move += "x";
+		 }
+		 move += "" + cols.get((colTo-1)) + rows.get(9-rowTo);
+		 return move;
+	 }
+	 
+	 /**
+	  * This method allows the moves to be recorded and stored in a .txt file
+	  */
+	 public void saveMovesToFile(String str){
+		 try(FileWriter fw = new FileWriter("GameFile.txt", true);
+		    BufferedWriter bw = new BufferedWriter(fw);
+		    PrintWriter out = new PrintWriter(bw))
+		 {
+		    out.print("" + str);
+		 } catch (IOException e) {
+		 }
+	 }
+	 
+	 /**
+	  * Returns a list of all the potential squares which a given piece could move to
+	  * @param piece
+	  * @param col
+	  * @param row
+	  * @return
+	  */
+	 public ArrayList<ArrayList<Integer>>getValidMoves(Piece piece, int col, int row){
+		 ArrayList<ArrayList<Integer>> validMoves = new ArrayList<>();
+		 int potentialCol;
+		 int potentialRow;
+		 row = 10 - row;
+		 switch (piece.type){
+		 	case "Pawn":
+		 		ArrayList<Integer> thisPawnMove = new ArrayList<>();
+		 		//Need to add diagonal taking, en passant and promoting
+			 		if(piece.isWhite){
+			 			potentialCol = col;
+				 		potentialRow = row++;
+				 		if(checkInBounds(potentialCol, potentialRow)){
+				 			thisPawnMove.add(col);
+				 			thisPawnMove.add(row++);
+				 		}
+			 		}else{
+			 			potentialCol = col;
+				 		potentialRow = row--;
+				 		if(checkInBounds(potentialCol, potentialRow)){
+				 			thisPawnMove.add(col); 
+				 			thisPawnMove.add(row--);
+				 		}
+			 		}
+			 		validMoves.add(thisPawnMove);
+		 		break;
+		 	case "Knight":
+		 		for(int i = -2; i <= 2; i ++){
+		 			for(int j = -2; j <= 2; j++){
+		 				if(Math.abs(j) != Math.abs(i) && i != 0 && j != 0){
+		 					potentialCol = col+j;
+		 					potentialRow = row+i;
+		 					if(checkInBounds(potentialCol, potentialRow)){
+			 					ArrayList<Integer> thisKnightMove = new ArrayList<>();
+			 					thisKnightMove.add(col+j);
+			 					thisKnightMove.add(row+i);
+			 					validMoves.add(thisKnightMove);
+		 					}
+		 				}
+		 			}
+		 		}
+		 		break;
+		 	case "Bishop":
+		 		for(int i = 1; i < 8; i++){
+		 			for(int j = -1; j <= 1; j+=2){
+		 				for(int k = -1; k <= 1; k+=2){
+		 					ArrayList<Integer> thisBishopMove = new ArrayList<>();
+		 					potentialCol = col+i*j;
+		 					potentialRow = row+i*k;
+		 					if(checkInBounds(potentialCol, potentialRow)){
+					 			thisBishopMove.add(col+= i*j);
+					 			thisBishopMove.add(row += i*k);
+					 			validMoves.add(thisBishopMove);
+		 					}
+		 				}
+		 			}
+		 			
+		 		}
+		 		break;
+		 	case "Rook":
+		 		//Need to include castling but this will be activated by the king
+		 		for(int i = 1; i < 8; i++){
+		 			for(int j = -1; j <= 1; j++){
+		 				for(int k = -1; k <= 1; k++){
+		 					if(Math.abs(j) != Math.abs(k)){
+		 						potentialCol = col + j*i;
+		 						potentialRow = row + k*i;
+		 						if(checkInBounds(potentialCol, potentialRow)){
+						 			ArrayList<Integer> thisRookMove = new ArrayList<>();
+						 			thisRookMove.add(col + j*i);
+						 			thisRookMove.add(row + k*i);
+						 			validMoves.add(thisRookMove);
+		 						}
+		 					}
+		 				}
+		 			}
+		 		}
+		 		break;
+		 	case "Queen":
+		 		for(int i = 1; i < 8; i++){
+		 			for(int j = -1; j <= 1; j++){
+		 				for(int k = -1; k <= 1; k++){
+		 					if(!(j == 0 && k == 0)){
+		 						potentialCol = col+j*i;
+		 						potentialRow = row+k*i;
+		 						if(checkInBounds(potentialCol, potentialRow)){
+				 					ArrayList<Integer> thisQueenMove = new ArrayList<>();
+				 					thisQueenMove.add(col + j*i);
+				 					thisQueenMove.add(row + k*i);
+				 					validMoves.add(thisQueenMove);
+		 						}
+		 					}
+		 				}
+		 			}
+			 	}
+		 		break;
+		 	case "King":
+		 		//Have to deal with castling from here 
+		 		//Could have a boolean for whether castling is an option for each
+		 		//side which would include whether the two pieces are in the right places, 
+		 		//whether they have moved, if the squares in between are free, 
+		 		//and whether the move would put the King across check
+	 			for(int j = -1; j <= 1; j++){
+	 				for(int k = -1; k <= 1; k++){
+	 					if(!(j == 0 && k == 0)){
+	 						potentialCol = col + j;
+	 						potentialRow = row + k;
+	 						if(checkInBounds(potentialCol, potentialRow)){
+	 							System.out.println((col + j) + " " + (row + k));
+			 					ArrayList<Integer> thisKingMove = new ArrayList<>();
+			 					thisKingMove.add(col += j);
+			 					thisKingMove.add(row += k);
+			 					validMoves.add(thisKingMove);
+	 						}
+	 					}
+	 				}
+	 			}
+		 		break;
+		 	default:
+		 		break;
+		 }
+		return validMoves;
+	 }
+	 
+	 public void showMovesOnBoard(ArrayList<ArrayList<Integer>> array){
+		 for(ArrayList<Integer> coordinates: array){
+			 //coordinates.get(0);
+			 //board.getChildren(). coordinates.get(1); //get board coordinate and change background color
+			 System.out.println("Coords: "+ coordinates.toString());
+		 }
+	 }
+	 
+	 public boolean checkInBounds(int potentialCol, int potentialRow){
+		 int lowerBound = 1, upperBound = 8;
+		 if(potentialCol >= lowerBound && potentialCol <= upperBound && potentialRow >= lowerBound && potentialRow <= upperBound){
+			 return true;
+		 }else{
+			 return false;
+		 }
+	 }
+	 
 	public static void main(String[] args) {
 		launch(args);
 	}

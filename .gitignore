@@ -7,3 +7,4 @@ bin/myapp/ChessMate\.class
 *.class
 *.class
 bin/myapp/WordCommands.class
+*.class

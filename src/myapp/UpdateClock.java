@@ -29,7 +29,7 @@ public class UpdateClock extends TimerTask{
 		time--;
 		minutes = (int) (time / 60);
 		seconds = (int) (time % 60);
-		System.out.println("" + minutes + ":" + String.format("%02d", seconds));
+		//System.out.println("" + minutes + ":" + String.format("%02d", seconds));
 		timeDisplay = "" + minutes + ":" + String.format("%02d", seconds);
 	}	
 }
