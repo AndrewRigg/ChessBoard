@@ -8,3 +8,4 @@ bin/myapp/ChessMate\.class
 *.class
 bin/myapp/WordCommands.class
 *.class
+bin/myapp/Piece.class
