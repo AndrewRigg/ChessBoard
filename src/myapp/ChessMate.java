@@ -48,8 +48,8 @@ public class ChessMate extends Application {
 	final int IMAGE_TYPES = 6, SQUARE_SIZE = 55, NUMBER_OF_PIECES = 16;
 	int [] indices = {5, 2, 0, 4, 1, 0, 2, 5};
 	int [] takenWhiteCounts = {0,0,0,0,0}, takenBlackCounts = {0,0,0,0,0};
-	int lines = 1;
-	boolean [][] occupied = new boolean[12][10];
+	int lines;
+	boolean [][] occupied = new boolean[8][8];
 	String [] imageLocations = {"Bishop", "King", "Knight", "Pawn", "Queen", "Rook"};	
 	private static final String VOICE = "kevin";
 	
@@ -109,11 +109,14 @@ public class ChessMate extends Application {
     	board.setPadding(new Insets(10));
 		board.setHgap(0);
 		board.setVgap(0);	 
+		lines = 1;
 	}
 	
 	public void start(Stage primaryStage) {		
 	    menuBar.prefWidthProperty().bind(primaryStage.widthProperty());
 	   
+	    setInitialOccupiedGrid();
+	    
 		setUpImages(whiteImages, true);
 		setUpImages(blackImages, false);
 		
@@ -176,18 +179,22 @@ public class ChessMate extends Application {
 		            	if(player.playerTurn) {
 			            	currentPiece = imageViews.get(innerI);
 			            	current = pieces.get(innerI);
+			            	ArrayList<ArrayList<Integer>> validMoves = getValidMoves(current, current.col, current.row);
+	            			System.out.println("Piece: " + current.getName());
+	            			showMovesOnBoard(validMoves);
 			            	piecePicked = true;
 		            	}else {
 		            		if(piecePicked) {
 		            			Piece piece = pieces.get(innerI);
 		            			piecePicked = false;
 		            			removePiece(piece);
+		            			occupied[current.row-2][current.col-1] = false;
 		            			movePiece(board, currentPiece, piece.col, piece.row);
 		            			String str2 = " ";
 		            			String str = recordMove_algebraic_notation(current, current.col, current.row, piece.col, piece.row, true, false, false, false);
 		            			//String command = getStringCommand(current, current.col, current.row, piece.col, piece.row);
 			            		//speak(command);
-		            			if(!piece.isWhite){
+		            			if(piece.isWhite){
 		            				str2 = "\r\n" + lines++ + ": ";
 		            			}
 		            			saveMovesToFile("" + str2 + str);
@@ -195,12 +202,27 @@ public class ChessMate extends Application {
 		            			current.col = piece.col;
 		            			current.row = piece.row;
 		            			swapTurns();
+		            			showOccupied();		            			
 		            		}
 		            	}
 		            }
 	            }
 	        });
 			imageViews.add(imageView);
+		}
+	}
+	
+	public void showOccupied(){
+		System.out.println("Occupied: ");
+		for(int i = 0; i < 8; i ++){
+			for(int j = 0; j < 8; j++){
+				if(occupied[i][j] == true){
+				System.out.print(1 + " ");
+				}else{
+					System.out.print(0 + " ");
+				}
+			}
+			System.out.print("\n");
 		}
 	}
 	
@@ -256,21 +278,22 @@ public class ChessMate extends Application {
 	            public void handle(MouseEvent t) {
 	            	int col = GridPane.getColumnIndex(pane);
             		int row = GridPane.getRowIndex(pane);
-	            	if(piecePicked && !occupied[row][col]) {
-	            		occupied[row][col] = true;
+	            	if(piecePicked && !occupied[row-2][col-1]) {
+	            		occupied[row-2][col-1] = true;
 	            		movePiece(board, currentPiece, col, row);
 	            		//String command = getStringCommand(current, current.col, current.row, col, row);
 	            		//speak(command);
+	            		occupied[current.row-2][current.col-1] = false;
             			String str2 = " ";
             			String str = recordMove_algebraic_notation(current, current.col, current.row, col, row, false, false, false, false);
-            			System.out.println(str);
-            			if(!current.isWhite){
+            			if(current.isWhite){
             				str2 = "\r\n" + lines++ + ": ";
             			}
             			saveMovesToFile("" + str2 + str);
             			current.col = col;
 	            		current.row = row;
 	            		piecePicked = false;
+	            		showOccupied();	
 	            		swapTurns();
 		            	}
 		            }
@@ -338,6 +361,15 @@ public class ChessMate extends Application {
 				pieces.get(i+8).col = i+1;
 				pieces.get(i+8).row = 3;
 			}
+		}
+	}
+	
+	public void setInitialOccupiedGrid(){
+		for(int j = 0; j < 8; j++){
+			occupied[0][j] = true;
+			occupied[1][j] = true;
+			occupied[6][j] = true;
+			occupied[7][j] = true;
 		}
 	}
 	
@@ -549,6 +581,7 @@ public class ChessMate extends Application {
 		 ArrayList<ArrayList<Integer>> validMoves = new ArrayList<>();
 		 int potentialCol;
 		 int potentialRow;
+		 row = 10 - row;
 		 switch (piece.type){
 		 	case "Pawn":
 		 		ArrayList<Integer> thisPawnMove = new ArrayList<>();
@@ -557,13 +590,15 @@ public class ChessMate extends Application {
 			 			potentialCol = col;
 				 		potentialRow = row++;
 				 		if(checkInBounds(potentialCol, potentialRow)){
-				 			thisPawnMove.add(col, row--);
+				 			thisPawnMove.add(col);
+				 			thisPawnMove.add(row++);
 				 		}
 			 		}else{
 			 			potentialCol = col;
 				 		potentialRow = row--;
 				 		if(checkInBounds(potentialCol, potentialRow)){
-				 			thisPawnMove.add(col, row++);
+				 			thisPawnMove.add(col); 
+				 			thisPawnMove.add(row--);
 				 		}
 			 		}
 			 		validMoves.add(thisPawnMove);
@@ -572,12 +607,12 @@ public class ChessMate extends Application {
 		 		for(int i = -2; i <= 2; i ++){
 		 			for(int j = -2; j <= 2; j++){
 		 				if(Math.abs(j) != Math.abs(i) && i != 0 && j != 0){
-		 					//and if square at col+j, row+i is not out of bounds
 		 					potentialCol = col+j;
 		 					potentialRow = row+i;
 		 					if(checkInBounds(potentialCol, potentialRow)){
 			 					ArrayList<Integer> thisKnightMove = new ArrayList<>();
-			 					thisKnightMove.add(col+j, row+i);
+			 					thisKnightMove.add(col+j);
+			 					thisKnightMove.add(row+i);
 			 					validMoves.add(thisKnightMove);
 		 					}
 		 				}
@@ -650,6 +685,7 @@ public class ChessMate extends Application {
 	 						potentialCol = col + j;
 	 						potentialRow = row + k;
 	 						if(checkInBounds(potentialCol, potentialRow)){
+	 							System.out.println((col + j) + " " + (row + k));
 			 					ArrayList<Integer> thisKingMove = new ArrayList<>();
 			 					thisKingMove.add(col += j);
 			 					thisKingMove.add(row += k);
@@ -663,6 +699,14 @@ public class ChessMate extends Application {
 		 		break;
 		 }
 		return validMoves;
+	 }
+	 
+	 public void showMovesOnBoard(ArrayList<ArrayList<Integer>> array){
+		 for(ArrayList<Integer> coordinates: array){
+			 //coordinates.get(0);
+			 //board.getChildren(). coordinates.get(1); //get board coordinate and change background color
+			 System.out.println("Coords: "+ coordinates.toString());
+		 }
 	 }
 	 
 	 public boolean checkInBounds(int potentialCol, int potentialRow){
