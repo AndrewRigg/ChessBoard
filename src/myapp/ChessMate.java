@@ -192,8 +192,8 @@ public class ChessMate extends Application {
 		            			movePiece(board, currentPiece, piece.col, piece.row);
 		            			String str2 = " ";
 		            			String str = recordMove_algebraic_notation(current, current.col, current.row, piece.col, piece.row, true, false, false, false);
-		            			//String command = getStringCommand(current, current.col, current.row, piece.col, piece.row);
-			            		//speak(command);
+		            			String command = getStringCommand(current, current.col, current.row, piece.col, piece.row);
+			            		speak(command);
 		            			if(piece.isWhite){
 		            				str2 = "\r\n" + lines++ + ": ";
 		            			}
@@ -281,8 +281,8 @@ public class ChessMate extends Application {
 	            	if(piecePicked && !occupied[row-2][col-1]) {
 	            		occupied[row-2][col-1] = true;
 	            		movePiece(board, currentPiece, col, row);
-	            		//String command = getStringCommand(current, current.col, current.row, col, row);
-	            		//speak(command);
+	            		String command = getStringCommand(current, current.col, current.row, col, row);
+	            		speak(command);
 	            		occupied[current.row-2][current.col-1] = false;
             			String str2 = " ";
             			String str = recordMove_algebraic_notation(current, current.col, current.row, col, row, false, false, false, false);
@@ -502,7 +502,7 @@ public class ChessMate extends Application {
 	 * @return
 	 */
 	public String getStringCommand(Piece piece,  int colFrom, int rowFrom,  int colTo, int rowTo){
-		return (piece.getName() + " from " + cols.get(colFrom-1) + rows.get(9-rowFrom) + " to " +  cols.get(colTo-1) + rows.get(9-rowTo));
+		return (piece.getType() + " from " + cols.get(colFrom-1) + rows.get(9-rowFrom) + " to " +  cols.get(colTo-1) + rows.get(9-rowTo));
 	}
 	
 	/**

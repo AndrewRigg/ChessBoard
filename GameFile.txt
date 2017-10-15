@@ -57,3 +57,10 @@
 4: Qxe4
 1: e4 b5
 2: c4 Rh5 Rxh5 Ra4 Bxa4 Bf5
+1: e4
+2: Qxe4 Bxe4 b5 Bxb5
+1: e4 fxd7 Qc5
+1: b4
+1: d4
+2: Qxd4 gxb7
+1: cxc2
