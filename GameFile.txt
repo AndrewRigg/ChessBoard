@@ -115,4 +115,28 @@
 1: Qe3 cxd8
 1: Qd5 Nf6
 1: g3
-1: Qd5 d6
+1: Qd5 d6 dxd7
+1: cxc2
+2: Rh5
+3: Nxd7
+4: Nb3
+1: c4 Qe3
+2: Bd3 d4
+3: Bc3 Ng3
+4: Be5 c6
+1: d3 f5
+1: d4
+1: c4
+1: Qd4
+1: c3 e6
+2: Qc2 Nc6
+3: Na3 Nh6
+4: Bb5 Ng4
+5: g3
+1: d3
+2: Qxd3
+3: Qg4 Nf6
+4: Qe6
+1: d3 Ba6 Rxa6
+2: Nxa6 Bxa6 Nf6
+3: e3

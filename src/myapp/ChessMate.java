@@ -187,6 +187,7 @@ public class ChessMate extends Application {
 		            			System.out.println("Removed highlights");
 		            			removeHighlights(validMoves);
 		            			validMoves.clear();
+		            			flag = false;
 		            		}
 		            		
 			            		if(current!=null) {
@@ -214,29 +215,36 @@ public class ChessMate extends Application {
 			            	piecePicked = true;
 		            	}else {
 		            		if(piecePicked) {
-		            			if(!validMoves.isEmpty()) {
-		            				removeHighlights(validMoves);
-		            				validMoves.clear();
-		            			}
+		            			
 		            			Piece piece = pieces.get(innerI);
 		            			piecePicked = false;
-		            			removePiece(piece);
-		            			occupied[current.row-2][current.col-1] = false;
-		            			movePiece(board, currentPiece, piece.col, piece.row);
-		            			String str2 = " ";
-		            			String str = recordMove_algebraic_notation(current, current.col, current.row, piece.col, piece.row, true, false, false, false);
-		            			String command = getStringCommand(current, current.col, current.row, piece.col, piece.row);
-			            		speak(command);
-		            			if(piece.isWhite){
-		            				str2 = "\r\n" + lines++ + ": ";
+		            			ArrayList<Integer> temp = new ArrayList<>();
+		            			temp.add(piece.col);
+		            			temp.add(10 - piece.row);
+		            			if(validMoves.contains(temp)) {
+			            			removePiece(piece);
+			            			occupied[current.row-2][current.col-1] = false;
+		            			
+			            			movePiece(board, currentPiece, piece.col, piece.row);
+			            			String str2 = " ";
+			            			String str = recordMove_algebraic_notation(current, current.col, current.row, piece.col, piece.row, true, false, false, false);
+			            			String command = getStringCommand(current, current.col, current.row, piece.col, piece.row);
+				            		speak(command);
+			            			if(piece.isWhite){
+			            				str2 = "\r\n" + lines++ + ": ";
+			            			}
+			            			saveMovesToFile("" + str2 + str);
+			            			piece.taken = true;
+			            			current.col = piece.col;
+			            			current.row = piece.row;
+			            			alreadySelected = false;
+			            			swapTurns();
+			            			showOccupied();	
 		            			}
-		            			saveMovesToFile("" + str2 + str);
-		            			piece.taken = true;
-		            			current.col = piece.col;
-		            			current.row = piece.row;
-		            			alreadySelected = false;
-		            			swapTurns();
-		            			showOccupied();		            			
+			            			if(!validMoves.isEmpty()) {
+			            				removeHighlights(validMoves);
+			            				validMoves.clear();
+			            			}
 		            		}
 		            	}
 		            }
@@ -318,27 +326,36 @@ public class ChessMate extends Application {
 	            	int col = GridPane.getColumnIndex(pane);
             		int row = GridPane.getRowIndex(pane);
 	            	if(piecePicked && !occupied[row-2][col-1]) {
-	            		if(!validMoves.isEmpty()) {
-	            			removeHighlights(validMoves);
-	            			validMoves.clear();
+	            		
+	            		
+	            		ArrayList<Integer> temp = new ArrayList<>();
+            			temp.add(col);
+            			temp.add(10 - row);
+            			System.out.println("Temp: " + col + " " + row);
+            			System.out.println("valid moves" + validMoves.toString());
+	            		if(validMoves.contains(temp)) {
+	            			occupied[row-2][col-1] = true;
+		            		movePiece(board, currentPiece, col, row);
+		            		String command = getStringCommand(current, current.col, current.row, col, row);
+		            		speak(command);
+		            		occupied[current.row-2][current.col-1] = false;
+	            			String str2 = " ";
+	            			String str = recordMove_algebraic_notation(current, current.col, current.row, col, row, false, false, false, false);
+	            			if(current.isWhite){
+	            				str2 = "\r\n" + lines++ + ": ";
+	            			}
+	            			saveMovesToFile("" + str2 + str);
+	            			current.col = col;
+		            		current.row = row;
+		            		piecePicked = false;
+		            		alreadySelected = false;
+		            		showOccupied();	
+		            		swapTurns();
 	            		}
-	            		occupied[row-2][col-1] = true;
-	            		movePiece(board, currentPiece, col, row);
-	            		String command = getStringCommand(current, current.col, current.row, col, row);
-	            		speak(command);
-	            		occupied[current.row-2][current.col-1] = false;
-            			String str2 = " ";
-            			String str = recordMove_algebraic_notation(current, current.col, current.row, col, row, false, false, false, false);
-            			if(current.isWhite){
-            				str2 = "\r\n" + lines++ + ": ";
-            			}
-            			saveMovesToFile("" + str2 + str);
-            			current.col = col;
-	            		current.row = row;
-	            		piecePicked = false;
-	            		alreadySelected = false;
-	            		showOccupied();	
-	            		swapTurns();
+		            		if(!validMoves.isEmpty()) {
+		            			removeHighlights(validMoves);
+		            			validMoves.clear();
+		            		}
 		            	}
 		            }
 		        });
@@ -776,7 +793,7 @@ public class ChessMate extends Application {
 			 //coordinates.get(0);
 			 char a = 'a';
 			 //board.getChildren(). coordinates.get(1); //get board coordinate and change background color
-			 System.out.println("Coords: ["+ (char)(a+=coordinates.get(0)-1) + ", " + coordinates.get(1) + "]");
+//			 System.out.println("Coords: ["+ (char)(a+=coordinates.get(0)-1) + ", " + coordinates.get(1) + "]");
 		 }
 	 }
 	 
