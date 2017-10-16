@@ -1,3 +1,4 @@
+package myapp;
  
 import com.gtranslate.Audio;
 import com.gtranslate.Language;
@@ -15,7 +16,14 @@ import javafx.stage.Stage;
 import javazoom.jl.decoder.JavaLayerException;
  
 /**
- *
+ * Put this somewhere:
+ * Speech recognition:
+ * https://speech.googleapis.com/v1/speech:recognize?key=YOUR_API_KEY
+ * i.e. this should work:
+ * https://speech.googleapis.com/v1/speech:recognize?key=AIzaSyCqS21VSxk_GMxqRc9mELmBMzOE_F6NxKQ
+ * Text-to-speech (google translate API)
+ * https://translation.googleapis.com/language/translate/v2?key=YOUR_API_KEY
+ * https://translation.googleapis.com/language/translate/v2?key=AIzaSyCqS21VSxk_GMxqRc9mELmBMzOE_F6NxKQ
  * @web http://java-buddy.blogspot.com/
  */
 public class TTS extends Application {

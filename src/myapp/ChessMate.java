@@ -22,6 +22,7 @@ import javafx.scene.image.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.Shape;
 
 public class ChessMate extends Application {
 
@@ -39,13 +40,14 @@ public class ChessMate extends Application {
 	ArrayList<Piece> whitePieces, blackPieces;
 	ArrayList<Integer> rows;
 	ArrayList<Character> cols;
+	ArrayList<ArrayList<Integer>> validMoves;
 	ImageView currentPiece;
 	Piece current;
 	GridPane board;
 	StackPane clockPane1, clockPane2;
-	boolean piecePicked, whiteTurn;
+	boolean piecePicked, whiteTurn, alreadySelected, flag;
 	
-	final int IMAGE_TYPES = 6, SQUARE_SIZE = 55, NUMBER_OF_PIECES = 16;
+	final int IMAGE_TYPES = 6, SQUARE_SIZE = 80, NUMBER_OF_PIECES = 16;
 	int [] indices = {5, 2, 0, 4, 1, 0, 2, 5};
 	int [] takenWhiteCounts = {0,0,0,0,0}, takenBlackCounts = {0,0,0,0,0};
 	int lines;
@@ -87,6 +89,7 @@ public class ChessMate extends Application {
 		blackPieces = new ArrayList<>();
 		rows = new ArrayList<>();
 		cols = new ArrayList<>();
+		validMoves = new ArrayList<>();
 		for(int i = 1, a = 'a'; i <= 8; i ++, a++){
 			rows.add(i);
 			cols.add((char) a);
@@ -117,6 +120,8 @@ public class ChessMate extends Application {
 	   
 	    setInitialOccupiedGrid();
 	    
+	    setUpBoard();
+	    
 		setUpImages(whiteImages, true);
 		setUpImages(blackImages, false);
 		
@@ -129,7 +134,7 @@ public class ChessMate extends Application {
 		setUpPieces(whitePieces, whiteImageViews, imageLocations, indices, true);
 		setUpPieces(blackPieces, blackImageViews, imageLocations, indices, false);
 		
-		setUpBoard();
+		
 		
 		addPiecesToBoard(board, whitePieces, whiteImageViews, true);
 		addPiecesToBoard(board, blackPieces, blackImageViews, false);
@@ -177,14 +182,42 @@ public class ChessMate extends Application {
 	            public void handle(MouseEvent t) {
 	            	if(!pieces.get(innerI).taken){
 		            	if(player.playerTurn) {
-			            	currentPiece = imageViews.get(innerI);
-			            	current = pieces.get(innerI);
-			            	ArrayList<ArrayList<Integer>> validMoves = getValidMoves(current, current.col, current.row);
-	            			System.out.println("Piece: " + current.getName());
-	            			showMovesOnBoard(validMoves);
+		            		flag = !flag;
+		            		if(!validMoves.isEmpty()) {
+		            			System.out.println("Removed highlights");
+		            			removeHighlights(validMoves);
+		            			validMoves.clear();
+		            		}
+		            		
+			            		if(current!=null) {
+			            			if(!current.equals(pieces.get(innerI))) {
+			            				System.out.println("Not current piece");
+			            				alreadySelected = false;
+			            			}else {
+			            				if(flag) {
+			            					alreadySelected = false;
+			            				}
+			            			}
+			            		}
+				            	
+		            			if(!alreadySelected) {
+		            				currentPiece = imageViews.get(innerI);
+					            	current = pieces.get(innerI);
+					            	validMoves = getValidMoves(current, current.col, current.row);
+			            			System.out.println("Piece: " + current.getName());
+		            				System.out.println("Showed highlights");
+		            				showMovesOnBoard(validMoves);
+		            				highlightMoves(validMoves);
+		            				alreadySelected = true;
+		            			}
+		            		
 			            	piecePicked = true;
 		            	}else {
 		            		if(piecePicked) {
+		            			if(!validMoves.isEmpty()) {
+		            				removeHighlights(validMoves);
+		            				validMoves.clear();
+		            			}
 		            			Piece piece = pieces.get(innerI);
 		            			piecePicked = false;
 		            			removePiece(piece);
@@ -201,6 +234,7 @@ public class ChessMate extends Application {
 		            			piece.taken = true;
 		            			current.col = piece.col;
 		            			current.row = piece.row;
+		            			alreadySelected = false;
 		            			swapTurns();
 		            			showOccupied();		            			
 		            		}
@@ -271,6 +305,11 @@ public class ChessMate extends Application {
 		for(int a = 0; a < 10; a++) {
 			for(int b = 0; b < 13; b++) {
 				StackPane pane = new StackPane();
+				
+				Rectangle rec = new Rectangle(SQUARE_SIZE, SQUARE_SIZE);
+				createCheckerBoard(rec, a, b-1);
+				pane.getChildren().add(rec);
+				
 				if(a > 0 && b > 1 && a < 9 && b < 9){
 				pane.setOnMouseClicked(new EventHandler<MouseEvent>()
 		        {
@@ -279,6 +318,10 @@ public class ChessMate extends Application {
 	            	int col = GridPane.getColumnIndex(pane);
             		int row = GridPane.getRowIndex(pane);
 	            	if(piecePicked && !occupied[row-2][col-1]) {
+	            		if(!validMoves.isEmpty()) {
+	            			removeHighlights(validMoves);
+	            			validMoves.clear();
+	            		}
 	            		occupied[row-2][col-1] = true;
 	            		movePiece(board, currentPiece, col, row);
 	            		String command = getStringCommand(current, current.col, current.row, col, row);
@@ -293,6 +336,7 @@ public class ChessMate extends Application {
             			current.col = col;
 	            		current.row = row;
 	            		piecePicked = false;
+	            		alreadySelected = false;
 	            		showOccupied();	
 	            		swapTurns();
 		            	}
@@ -331,9 +375,7 @@ public class ChessMate extends Application {
 					pane.setAlignment(Pos.TOP_CENTER);
 				}
 				
-				Rectangle rec = new Rectangle(SQUARE_SIZE, SQUARE_SIZE);
-				createCheckerBoard(rec, a, b-1);
-				pane.getChildren().add(rec);
+				
 				board.add(pane, a, b);
 			}
 		}
@@ -578,7 +620,6 @@ public class ChessMate extends Application {
 	  * @return
 	  */
 	 public ArrayList<ArrayList<Integer>>getValidMoves(Piece piece, int col, int row){
-		 ArrayList<ArrayList<Integer>> validMoves = new ArrayList<>();
 		 int potentialCol;
 		 int potentialRow;
 		 row = 10 - row;
@@ -624,11 +665,11 @@ public class ChessMate extends Application {
 		 			for(int j = -1; j <= 1; j+=2){
 		 				for(int k = -1; k <= 1; k+=2){
 		 					ArrayList<Integer> thisBishopMove = new ArrayList<>();
-		 					potentialCol = col+i*j;
-		 					potentialRow = row+i*k;
+		 					potentialCol = col+(i*j);
+		 					potentialRow = row+(i*k);
 		 					if(checkInBounds(potentialCol, potentialRow)){
-					 			thisBishopMove.add(col+= i*j);
-					 			thisBishopMove.add(row += i*k);
+					 			thisBishopMove.add(col+ i*j);
+					 			thisBishopMove.add(row + i*k);
 					 			validMoves.add(thisBishopMove);
 		 					}
 		 				}
@@ -642,6 +683,7 @@ public class ChessMate extends Application {
 		 			for(int j = -1; j <= 1; j++){
 		 				for(int k = -1; k <= 1; k++){
 		 					if(Math.abs(j) != Math.abs(k)){
+		 						System.out.println("i,j,k:" + i + " " + j + " " + k);
 		 						potentialCol = col + j*i;
 		 						potentialRow = row + k*i;
 		 						if(checkInBounds(potentialCol, potentialRow)){
@@ -687,8 +729,8 @@ public class ChessMate extends Application {
 	 						if(checkInBounds(potentialCol, potentialRow)){
 	 							System.out.println((col + j) + " " + (row + k));
 			 					ArrayList<Integer> thisKingMove = new ArrayList<>();
-			 					thisKingMove.add(col += j);
-			 					thisKingMove.add(row += k);
+			 					thisKingMove.add(col + j);
+			 					thisKingMove.add(row + k);
 			 					validMoves.add(thisKingMove);
 	 						}
 	 					}
@@ -701,11 +743,40 @@ public class ChessMate extends Application {
 		return validMoves;
 	 }
 	 
+	 public void highlightMoves(ArrayList<ArrayList<Integer>> validMoves) {
+		 ObservableList<Node> children = board.getChildren();
+		 for(ArrayList<Integer> array: validMoves) {
+			 for(Node node: children){
+				 if(!(node instanceof ImageView)) {
+					if(GridPane.getRowIndex(node) == 10 - array.get(1) && GridPane.getColumnIndex(node) == array.get(0)){
+						Rectangle rec =  new Rectangle(SQUARE_SIZE, SQUARE_SIZE);
+						rec.setFill(Color.GREENYELLOW);
+						((Pane) node).getChildren().add(rec);
+					}
+				 }
+			 }
+		 }
+	 }
+	 
+	 public void removeHighlights(ArrayList<ArrayList<Integer>> validMoves) {
+		 ObservableList<Node> children = board.getChildren();
+		 for(ArrayList<Integer> array: validMoves) {
+			 for(Node node: children){
+				 if(!(node instanceof ImageView)) {
+					if(GridPane.getRowIndex(node) == 10 - array.get(1) && GridPane.getColumnIndex(node) == array.get(0)){
+						((Pane) node).getChildren().remove(((Pane) node).getChildren().size()-1);
+					}
+				 }
+			 }
+		 }
+	 }
+	 
 	 public void showMovesOnBoard(ArrayList<ArrayList<Integer>> array){
 		 for(ArrayList<Integer> coordinates: array){
 			 //coordinates.get(0);
+			 char a = 'a';
 			 //board.getChildren(). coordinates.get(1); //get board coordinate and change background color
-			 System.out.println("Coords: "+ coordinates.toString());
+			 System.out.println("Coords: ["+ (char)(a+=coordinates.get(0)-1) + ", " + coordinates.get(1) + "]");
 		 }
 	 }
 	 

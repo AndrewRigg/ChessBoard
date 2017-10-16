@@ -64,3 +64,55 @@
 1: d4
 2: Qxd4 gxb7
 1: cxc2
+1: c4 d5 Qxd5
+1: c4 e5 Bxe5
+1: d4
+1: b4 f4
+1: Nd3
+2: Qxd3
+1: d4 Ne5
+1: d4
+2: Nxd4 fxd8
+1: d4
+1: d4 e5
+1: c4 e5 Bxb7
+1: c4
+1: d4
+1: c4
+1: c4
+1: d4 c5 Bxc5
+2: exc5
+3: e4
+4: cxd4 Nxb8
+1: d6 dxc7
+1: d4
+1: e4
+1: f5
+1: e4
+1: Qc5 fxd7
+1: e4
+1: d3 f5
+2: Qb4
+1: e4
+2: dxe4 exd7 c5 Qxc5
+1: d4 c6
+1: Nc3 e6
+2: Nf3 d6
+3: Nd5
+1: e3
+1: Nf3
+1: Qd5
+1: e4 Qb4
+1: Qg4
+1: Qg4
+1: Qg4
+1: Qg4 c5
+2: Rh6
+3: Nxh6
+1: c4
+2: dxc4
+1: e4
+1: Qe3 cxd8
+1: Qd5 Nf6
+1: g3
+1: Qd5 d6
