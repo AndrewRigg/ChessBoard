@@ -8,8 +8,7 @@ public class Piece {
 	String type = "";
 	int col;
 	int row;
-	boolean taken;
-	boolean isWhite;
+	boolean taken, isWhite, unmoved;
 	String notation = "";
 	
 	public Piece(String name, String type, int col, int row, ImageView image, boolean isWhite) {
@@ -24,6 +23,7 @@ public class Piece {
 		}else if (!type.equals("Pawn")){
 			notation = type.substring(0,1);
 		}
+		unmoved = true;
 	}
 	
 	public Piece(String name) {

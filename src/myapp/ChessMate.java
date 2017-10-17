@@ -4,25 +4,44 @@
  */
 package myapp;
 
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 
-import com.sun.speech.freetts.*;
+import com.sun.speech.freetts.Voice;
+import com.sun.speech.freetts.VoiceManager;
 
-import javafx.application.*;
+import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
-import javafx.geometry.*;
-import javafx.stage.*;
-import javafx.scene.*;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
-import javafx.scene.text.*;
-import javafx.scene.image.*;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
+import javafx.scene.Node;
+import javafx.scene.Scene;
+import javafx.scene.control.CheckMenuItem;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.RadioMenuItem;
+import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.control.ToggleGroup;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-import javafx.scene.shape.Shape;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
+import javafx.stage.Screen;
+import javafx.stage.Stage;
 
 public class ChessMate extends Application {
 
@@ -125,8 +144,8 @@ public class ChessMate extends Application {
 		setUpImages(whiteImages, true);
 		setUpImages(blackImages, false);
 		
-		setUpImageViews(whiteImageViews, whitePieces, player1);
-		setUpImageViews(blackImageViews, blackPieces, player2);
+		setUpImageViews(whiteImageViews, whitePieces, blackPieces, player1);
+		setUpImageViews(blackImageViews, blackPieces, whitePieces, player2);
 		
 		assignImages(whiteImageViews, whiteImages, indices);
 		assignImages(blackImageViews, blackImages, indices);
@@ -170,7 +189,7 @@ public class ChessMate extends Application {
 	 * @param player
 	 * @param takenPieces
 	 */
-	public void setUpImageViews(ArrayList<ImageView> imageViews, ArrayList<Piece> pieces, Player player) {
+	public void setUpImageViews(ArrayList<ImageView> imageViews, ArrayList<Piece> pieces, ArrayList<Piece> otherPieces, Player player) {
 		for(int i = 0; i < NUMBER_OF_PIECES; i++) {
 			ImageView imageView = new ImageView();
 			imageView.setFitWidth(SQUARE_SIZE);
@@ -184,7 +203,6 @@ public class ChessMate extends Application {
 		            	if(player.playerTurn) {
 		            		flag = !flag;
 		            		if(!validMoves.isEmpty()) {
-		            			System.out.println("Removed highlights");
 		            			removeHighlights(validMoves);
 		            			validMoves.clear();
 		            			flag = false;
@@ -192,7 +210,6 @@ public class ChessMate extends Application {
 		            		
 			            		if(current!=null) {
 			            			if(!current.equals(pieces.get(innerI))) {
-			            				System.out.println("Not current piece");
 			            				alreadySelected = false;
 			            			}else {
 			            				if(flag) {
@@ -205,8 +222,10 @@ public class ChessMate extends Application {
 		            				currentPiece = imageViews.get(innerI);
 					            	current = pieces.get(innerI);
 					            	validMoves = getValidMoves(current, current.col, current.row);
+					            	System.out.println("valid moves before: " + validMoves.toString());
+					            	removeOwnColours(pieces, otherPieces, current);
+					            	System.out.println("valid moves after: " + validMoves.toString());
 			            			System.out.println("Piece: " + current.getName());
-		            				System.out.println("Showed highlights");
 		            				showMovesOnBoard(validMoves);
 		            				highlightMoves(validMoves);
 		            				alreadySelected = true;
@@ -222,14 +241,14 @@ public class ChessMate extends Application {
 		            			temp.add(piece.col);
 		            			temp.add(10 - piece.row);
 		            			if(validMoves.contains(temp)) {
-			            			removePiece(piece);
+			            			int [] tempPos = removePiece(piece);
 			            			occupied[current.row-2][current.col-1] = false;
 		            			
 			            			movePiece(board, currentPiece, piece.col, piece.row);
 			            			String str2 = " ";
 			            			String str = recordMove_algebraic_notation(current, current.col, current.row, piece.col, piece.row, true, false, false, false);
-			            			String command = getStringCommand(current, current.col, current.row, piece.col, piece.row);
-				            		speak(command);
+			            			//String command = getStringCommand(current, current.col, current.row, piece.col, piece.row);
+				            		//speak(command);
 			            			if(piece.isWhite){
 			            				str2 = "\r\n" + lines++ + ": ";
 			            			}
@@ -237,14 +256,17 @@ public class ChessMate extends Application {
 			            			piece.taken = true;
 			            			current.col = piece.col;
 			            			current.row = piece.row;
+			            			piece.col = tempPos[0];
+			            			piece.row = tempPos[1];
 			            			alreadySelected = false;
 			            			swapTurns();
 			            			showOccupied();	
 		            			}
-			            			if(!validMoves.isEmpty()) {
-			            				removeHighlights(validMoves);
-			            				validMoves.clear();
-			            			}
+		            			if(!validMoves.isEmpty()) {
+		            				removeHighlights(validMoves);
+		            				validMoves.clear();
+		            			}
+		            			current.unmoved = false;			            		
 		            		}
 		            	}
 		            }
@@ -319,46 +341,44 @@ public class ChessMate extends Application {
 				pane.getChildren().add(rec);
 				
 				if(a > 0 && b > 1 && a < 9 && b < 9){
-				pane.setOnMouseClicked(new EventHandler<MouseEvent>()
-		        {
-	            @Override
-	            public void handle(MouseEvent t) {
-	            	int col = GridPane.getColumnIndex(pane);
-            		int row = GridPane.getRowIndex(pane);
-	            	if(piecePicked && !occupied[row-2][col-1]) {
-	            		
-	            		
-	            		ArrayList<Integer> temp = new ArrayList<>();
-            			temp.add(col);
-            			temp.add(10 - row);
-            			System.out.println("Temp: " + col + " " + row);
-            			System.out.println("valid moves" + validMoves.toString());
-	            		if(validMoves.contains(temp)) {
-	            			occupied[row-2][col-1] = true;
-		            		movePiece(board, currentPiece, col, row);
-		            		String command = getStringCommand(current, current.col, current.row, col, row);
-		            		speak(command);
-		            		occupied[current.row-2][current.col-1] = false;
-	            			String str2 = " ";
-	            			String str = recordMove_algebraic_notation(current, current.col, current.row, col, row, false, false, false, false);
-	            			if(current.isWhite){
-	            				str2 = "\r\n" + lines++ + ": ";
-	            			}
-	            			saveMovesToFile("" + str2 + str);
-	            			current.col = col;
-		            		current.row = row;
-		            		piecePicked = false;
-		            		alreadySelected = false;
-		            		showOccupied();	
-		            		swapTurns();
-	            		}
-		            		if(!validMoves.isEmpty()) {
-		            			removeHighlights(validMoves);
-		            			validMoves.clear();
-		            		}
-		            	}
-		            }
-		        });
+					pane.setOnMouseClicked(new EventHandler<MouseEvent>(){
+			            @Override
+			            public void handle(MouseEvent t) {
+			            	int col = GridPane.getColumnIndex(pane);
+		            		int row = GridPane.getRowIndex(pane);
+			            	if(piecePicked && !occupied[row-2][col-1]) {
+			            		ArrayList<Integer> temp = new ArrayList<>();
+		            			temp.add(col);
+		            			temp.add(10 - row);
+		            			System.out.println("Temp: " + col + " " + row);
+		            			System.out.println("valid moves" + validMoves.toString());
+			            		if(validMoves.contains(temp)) {
+			            			occupied[row-2][col-1] = true;
+				            		movePiece(board, currentPiece, col, row);
+				            		//String command = getStringCommand(current, current.col, current.row, col, row);
+				            		//speak(command);
+				            		occupied[current.row-2][current.col-1] = false;
+			            			String str2 = " ";
+			            			String str = recordMove_algebraic_notation(current, current.col, current.row, col, row, false, false, false, false);
+			            			if(current.isWhite){
+			            				str2 = "\r\n" + lines++ + ": ";
+			            			}
+			            			saveMovesToFile("" + str2 + str);
+			            			current.col = col;
+				            		current.row = row;
+				            		piecePicked = false;
+				            		alreadySelected = false;
+				            		showOccupied();	
+				            		swapTurns();
+			            		}
+			            		if(!validMoves.isEmpty()) {
+			            			removeHighlights(validMoves);
+			            			validMoves.clear();
+			            		}
+			            		current.unmoved = false;
+				            }
+				        }
+			        });
 				}
 		
 				//Add clock1 to top left of board
@@ -505,7 +525,7 @@ public class ChessMate extends Application {
 	 * Remove taken piece from the board and put in zone for that type
 	 * @param takenPiece
 	 */
-	public void removePiece(Piece takenPiece){
+	public int[] removePiece(Piece takenPiece){
 		ObservableList<Node> children = board.getChildren();
 		int row = 0;
 		int col = 1;
@@ -548,6 +568,8 @@ public class ChessMate extends Application {
 		}
 		movePiece(board, takenPiece.image, col, row);
 		takenPiece.taken = true;
+		int [] temp = {col, row};
+		return temp;
 	}
 	
 	/**
@@ -642,8 +664,28 @@ public class ChessMate extends Application {
 		 row = 10 - row;
 		 switch (piece.type){
 		 	case "Pawn":
-		 		ArrayList<Integer> thisPawnMove = new ArrayList<>();
+		 		
 		 		//Need to add diagonal taking, en passant and promoting
+		 		if(piece.unmoved) {
+		 			potentialCol = col;
+			 		potentialRow = row;
+		 			for(int i = 1; i <= 2; i++) {
+		 				ArrayList<Integer> thisPawnMove = new ArrayList<>();
+			 			if(piece.isWhite){
+					 		if(checkInBounds(potentialCol, potentialRow)){
+					 			thisPawnMove.add(col);
+					 			thisPawnMove.add(row+i);
+					 		}
+				 		}else{
+					 		if(checkInBounds(potentialCol, potentialRow)){
+					 			thisPawnMove.add(col); 
+					 			thisPawnMove.add(row-i);
+					 		}
+				 		}
+			 			validMoves.add(thisPawnMove);
+		 			}
+		 		}else {
+		 			ArrayList<Integer> thisPawnMove = new ArrayList<>();
 			 		if(piece.isWhite){
 			 			potentialCol = col;
 				 		potentialRow = row++;
@@ -660,7 +702,10 @@ public class ChessMate extends Application {
 				 		}
 			 		}
 			 		validMoves.add(thisPawnMove);
+		 		}
+			 		
 		 		break;
+		 		
 		 	case "Knight":
 		 		for(int i = -2; i <= 2; i ++){
 		 			for(int j = -2; j <= 2; j++){
@@ -677,6 +722,7 @@ public class ChessMate extends Application {
 		 			}
 		 		}
 		 		break;
+		 		
 		 	case "Bishop":
 		 		for(int i = 1; i < 8; i++){
 		 			for(int j = -1; j <= 1; j+=2){
@@ -694,6 +740,7 @@ public class ChessMate extends Application {
 		 			
 		 		}
 		 		break;
+		 		
 		 	case "Rook":
 		 		//Need to include castling but this will be activated by the king
 		 		for(int i = 1; i < 8; i++){
@@ -714,6 +761,7 @@ public class ChessMate extends Application {
 		 			}
 		 		}
 		 		break;
+		 		
 		 	case "Queen":
 		 		for(int i = 1; i < 8; i++){
 		 			for(int j = -1; j <= 1; j++){
@@ -732,6 +780,7 @@ public class ChessMate extends Application {
 		 			}
 			 	}
 		 		break;
+		 		
 		 	case "King":
 		 		//Have to deal with castling from here 
 		 		//Could have a boolean for whether castling is an option for each
@@ -754,10 +803,75 @@ public class ChessMate extends Application {
 	 				}
 	 			}
 		 		break;
+		 		
 		 	default:
 		 		break;
 		 }
+		 
+		
+		 
+		 
 		return validMoves;
+	 }
+	 
+	 /**
+	  * This removes the squares in the valid moves list which are not valid
+	  * due to being occupied by a piece of the same colour
+	  * @param pieces
+	  * @param piece
+	  */
+	 public void removeOwnColours(ArrayList<Piece> pieces, ArrayList<Piece> otherPieces, Piece piece) {
+		 for(Piece samePiece: pieces) {
+			 ArrayList<Integer> temp = new ArrayList<Integer>();
+			 temp.add(samePiece.col);
+			 temp.add(10 - samePiece.row);
+			 if(validMoves.contains(temp)) {
+				 System.out.println("temp: " + temp.toString());
+				 validMoves.remove(temp);
+				 if(piece.type == "Bishop" || piece.type == "Rook" || piece.type == "Queen") {
+					 for(int i = 0; i < 8; i++) {
+						 ArrayList<Integer> temp2 = new ArrayList<Integer>();
+						 int colDir = samePiece.col, rowDir = 10 -samePiece.row;
+						 if(piece.col != samePiece.col) {
+							 colDir = samePiece.col +((samePiece.col - piece.col)/Math.abs(samePiece.col - piece.col))*i;
+						 }
+						 if(piece.row != samePiece.row) {
+							 rowDir = 10 - (samePiece.row +((samePiece.row - piece.row)/Math.abs(samePiece.row - piece.row))*i);
+						 }
+						 temp2.add(colDir);
+						 temp2.add(rowDir);
+						 if(validMoves.contains(temp2)) {
+							 validMoves.remove(temp2);
+						 }
+					 }
+				 }
+			 }
+		 }
+		 //Here try to prevent certain pieces jumping over pieces of opposite colour
+		 for(Piece oppositePiece: otherPieces) {
+			 ArrayList<Integer> temp3 = new ArrayList<Integer>();
+			 temp3.add(oppositePiece.col);
+			 temp3.add(10 - oppositePiece.row);
+			 if(validMoves.contains(temp3)) {
+				 if(piece.type == "Bishop" || piece.type == "Rook" || piece.type == "Queen") {
+					 for(int i = 1; i < 8; i++) {
+						 ArrayList<Integer> temp4 = new ArrayList<Integer>();
+						 int colDir = oppositePiece.col, rowDir = 10 -oppositePiece.row;
+						 if(piece.col != oppositePiece.col) {
+							 colDir = oppositePiece.col +((oppositePiece.col - piece.col)/Math.abs(oppositePiece.col - piece.col))*i;
+						 }
+						 if(piece.row != oppositePiece.row) {
+							 rowDir = 10 - (oppositePiece.row +((oppositePiece.row - piece.row)/Math.abs(oppositePiece.row - piece.row))*i);
+						 }
+						 temp4.add(colDir);
+						 temp4.add(rowDir);
+						 if(validMoves.contains(temp4)) {
+							 validMoves.remove(temp4);
+						 }
+					 }
+				 }
+			 }
+		 }
 	 }
 	 
 	 public void highlightMoves(ArrayList<ArrayList<Integer>> validMoves) {
