@@ -222,10 +222,7 @@ public class ChessMate extends Application {
 		            				currentPiece = imageViews.get(innerI);
 					            	current = pieces.get(innerI);
 					            	validMoves = getValidMoves(current, current.col, current.row);
-					            	System.out.println("valid moves before: " + validMoves.toString());
 					            	removeOwnColours(pieces, otherPieces, current);
-					            	System.out.println("valid moves after: " + validMoves.toString());
-			            			System.out.println("Piece: " + current.getName());
 		            				showMovesOnBoard(validMoves);
 		            				highlightMoves(validMoves);
 		            				alreadySelected = true;
@@ -672,15 +669,11 @@ public class ChessMate extends Application {
 		 			for(int i = 1; i <= 2; i++) {
 		 				ArrayList<Integer> thisPawnMove = new ArrayList<>();
 			 			if(piece.isWhite){
-					 		if(checkInBounds(potentialCol, potentialRow)){
 					 			thisPawnMove.add(col);
 					 			thisPawnMove.add(row+i);
-					 		}
 				 		}else{
-					 		if(checkInBounds(potentialCol, potentialRow)){
 					 			thisPawnMove.add(col); 
 					 			thisPawnMove.add(row-i);
-					 		}
 				 		}
 			 			validMoves.add(thisPawnMove);
 		 			}
@@ -856,7 +849,7 @@ public class ChessMate extends Application {
 				 if(piece.type == "Bishop" || piece.type == "Rook" || piece.type == "Queen") {
 					 for(int i = 1; i < 8; i++) {
 						 ArrayList<Integer> temp4 = new ArrayList<Integer>();
-						 int colDir = oppositePiece.col, rowDir = 10 -oppositePiece.row;
+						 int colDir = oppositePiece.col, rowDir = 10 - oppositePiece.row;
 						 if(piece.col != oppositePiece.col) {
 							 colDir = oppositePiece.col +((oppositePiece.col - piece.col)/Math.abs(oppositePiece.col - piece.col))*i;
 						 }
@@ -867,6 +860,34 @@ public class ChessMate extends Application {
 						 temp4.add(rowDir);
 						 if(validMoves.contains(temp4)) {
 							 validMoves.remove(temp4);
+						 }
+					 }
+				 }else if(piece.type == "Pawn") {
+					 System.out.println("Here");
+					 validMoves.remove(temp3);
+					 if(piece.isWhite && piece.unmoved) {
+						 System.out.println("oppCol: "+oppositePiece.col + " oppRow: " + (10 - oppositePiece.row+1));
+						 if(piece.col == oppositePiece.col && piece.row == oppositePiece.row+1) {
+							 ArrayList<Integer> temp5 = new ArrayList<>();
+							 temp5.add(oppositePiece.col);
+							 temp5.add(10 - oppositePiece.row+1);
+							 System.out.println("temp5: " + temp5.toString());
+							 if(validMoves.contains(temp5)) {
+								 validMoves.remove(temp5);
+								 System.out.println("contains: " + temp5.toString());
+							 }
+						 }
+					 }else if(piece.unmoved) {
+						 System.out.println("oppBCol: "+oppositePiece.col + " oppBRow: " + (10 - oppositePiece.row-1));
+						 if(piece.col == oppositePiece.col && piece.row == oppositePiece.row-1) {
+							 ArrayList<Integer> temp6 = new ArrayList<>();
+							 temp6.add(oppositePiece.col);
+							 temp6.add(10 - oppositePiece.row - 1);
+							 System.out.println("temp6: " + temp6.toString());
+							 if(validMoves.contains(temp6)) {
+								 validMoves.remove(temp6);
+								 System.out.println("contains: " + temp6.toString());
+							 }
 						 }
 					 }
 				 }
