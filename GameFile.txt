@@ -1,6 +1,3 @@
-1: e4 c5
-2: e5 c4
-3: e6 c3
-4: exd7 cxd2
-5: dxc8 dxc1
-6: Nc3
+1: d4 f5
+2: d5 f4
+3: d6 cxd6

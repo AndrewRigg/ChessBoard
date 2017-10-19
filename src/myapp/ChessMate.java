@@ -5,34 +5,33 @@
 package myapp;
 
 import java.io.*;
-import java.util.ArrayList;
+import java.util.*;
 
 import com.sun.speech.freetts.*;
 
 import javafx.application.*;
-import javafx.collections.ObservableList;
-import javafx.event.EventHandler;
+import javafx.collections.*;
+import javafx.event.*;
 import javafx.geometry.*;
 import javafx.scene.*;
 import javafx.scene.control.*;
 import javafx.scene.image.*;
-import javafx.scene.input.MouseEvent;
+import javafx.scene.input.*;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
+import javafx.scene.paint.*;
+import javafx.scene.shape.*;
 import javafx.scene.text.*;
 import javafx.stage.*;
 
 public class ChessMate extends Application {
 
+	/**
+	 * Global variables
+	 */
 	Player player1, player2;
 	ChessClock clock1, clock2;
 	BorderPane root;
 	MenuBar menuBar;
-	Menu fileMenu, compMenu, tutorialMenu, webMenu;
-	MenuItem newMenuItem, saveMenuItem, exitMenuItem; 
-	CheckMenuItem p1MenuItem, p2MenuItem;
-	RadioMenuItem mycompItem, speedItem, customItem;
 	ToggleGroup tGroup;
 	Image [] whiteImages, blackImages;
 	ArrayList<ImageView> whiteImageViews, blackImageViews;
@@ -40,20 +39,23 @@ public class ChessMate extends Application {
 	ArrayList<Integer> rows;
 	ArrayList<Character> cols;
 	ArrayList<ArrayList<Integer>> validMoves;
+	ArrayList<Menu> menuOptions;
+	ArrayList<MenuItem> menuItemOptions, playerOptions, clockOptions, settingsOptions;
+	ArrayList<ArrayList<MenuItem>> allItems;
 	ImageView currentPiece;
 	Piece current;
 	GridPane board;
 	StackPane clockPane1, clockPane2;
-	boolean piecePicked, whiteTurn, alreadySelected, flag, firstMove = true;
-	
+	boolean piecePicked, whiteTurn, alreadySelected, flag, firstMove;
 	final int IMAGE_TYPES = 6, SQUARE_SIZE = 70, NUMBER_OF_PIECES = 16;
-	int [] indices = {5, 2, 0, 4, 1, 0, 2, 5};
-	int [] takenWhiteCounts = {0,0,0,0,0}, takenBlackCounts = {0,0,0,0,0};
+	int [] indices = {5, 2, 0, 4, 1, 0, 2, 5}, takenWhiteCounts = {0,0,0,0,0}, takenBlackCounts = {0,0,0,0,0};
 	int lines;
 	boolean [][] occupied = new boolean[8][8];
 	String [] imageLocations = {"Bishop", "King", "Knight", "Pawn", "Queen", "Rook"};	
+	String [] menus = {"File", "Competition", "Clock", "Tutorial"};
+	String [][] allMenuItems = {{"New", "Save", "Exit"}, {"Player1", "Player2"}, {"Competition", "Speed", "Custom"}, {"Rules", "Matches", "Moves"}};
 	private static final String VOICE = "kevin";
-	
+
 	/**
 	 * Constructor to initialise the chess board, players, clocks, menus
 	 * pieces, images and values.
@@ -66,20 +68,55 @@ public class ChessMate extends Application {
 		board = new GridPane();
 		clock1 = new ChessClock(ClockMode.CUSTOM, player1, 5, 10);
 		clock2 = new ChessClock(ClockMode.CUSTOM, player2, 10, 20); 
+		
 		menuBar = new MenuBar();
-		fileMenu = new Menu("File");
-		compMenu = new Menu("Competition");
-		tutorialMenu = new Menu("Tutorial");
-		webMenu = new Menu("Clock");
-		newMenuItem = new MenuItem("New");
-		saveMenuItem = new MenuItem("Save");
-		exitMenuItem = new MenuItem("Exit");
-		p1MenuItem = new CheckMenuItem("Player1");
-		p2MenuItem = new CheckMenuItem("Player2");
+		
 		tGroup = new ToggleGroup();
-		mycompItem = new RadioMenuItem("Competition");
-		speedItem = new RadioMenuItem("Speed");
-		customItem = new RadioMenuItem("Custom");
+		allItems = new ArrayList<>();
+		menuOptions = new ArrayList<>();
+		menuItemOptions = new ArrayList<>();
+		clockOptions = new ArrayList<>();
+		settingsOptions = new ArrayList<>();
+		
+		for(int i = 0; i < menus.length; i++) {
+			Menu thisMenu = new Menu(menus[i]);
+			menuOptions.add(thisMenu);
+		}
+		
+		for(int i = 0; i < allMenuItems[0].length; i++) {
+			MenuItem thisMenuItem = new MenuItem(allMenuItems[0][i]);
+			menuItemOptions.add(thisMenuItem);
+		}
+		menuItemOptions.add(2, new SeparatorMenuItem());
+		
+		for(int i = 0; i < allMenuItems[1].length; i++) {
+			RadioMenuItem compRadioItem = new RadioMenuItem(allMenuItems[1][i]);
+			compRadioItem.setToggleGroup(tGroup);
+			if(i == 0) {
+				compRadioItem.setSelected(true);
+			}
+			clockOptions.add(compRadioItem);
+		}
+		clockOptions.add(0, menuOptions.get(2));
+		clockOptions.add(1, new SeparatorMenuItem());
+		
+		for(int i = 0; i < allMenuItems[2].length; i++) {
+			CheckMenuItem settingsItem = new CheckMenuItem(allMenuItems[2][i]);
+			settingsOptions.add(settingsItem);
+		}
+		
+		playerOptions = new ArrayList<>();
+		for(int i = 0; i < allMenuItems[3].length; i++) {
+			RadioMenuItem thisCheckMenu = new RadioMenuItem(allMenuItems[3][i]);
+			playerOptions.add(thisCheckMenu);
+		}
+		((RadioMenuItem) playerOptions.get(0)).setSelected(true);
+		
+		allItems.add(menuItemOptions);
+		allItems.add(clockOptions);
+		allItems.add(settingsOptions);
+		allItems.add(playerOptions);
+		
 		whiteImages = new Image [IMAGE_TYPES];
 		blackImages = new Image [IMAGE_TYPES];
 		whiteImageViews = new ArrayList<>();
@@ -94,24 +131,19 @@ public class ChessMate extends Application {
 			cols.add((char) a);
 		}
 		root.setTop(menuBar);
-	    exitMenuItem.setOnAction(actionEvent -> Platform.exit());
-	    fileMenu.getItems().addAll(newMenuItem, saveMenuItem, new SeparatorMenuItem(), exitMenuItem);
-	    tutorialMenu.getItems().addAll(new CheckMenuItem("Rules"), new CheckMenuItem("Matches"), new CheckMenuItem("Moves"));
-	    compMenu.getItems().add(tutorialMenu);
-	    webMenu.getItems().add(p1MenuItem);
-	    webMenu.getItems().add(p2MenuItem);
-	    compMenu.getItems().addAll(mycompItem, speedItem, customItem);
-        p1MenuItem.setSelected(true);
-        mycompItem.setToggleGroup(tGroup);
-        mycompItem.setSelected(true);
-        speedItem.setToggleGroup(tGroup);
-        customItem.setToggleGroup(tGroup);
-        menuBar.getMenus().addAll(fileMenu, compMenu, webMenu);
+		menuItemOptions.get(3).setOnAction(actionEvent -> Platform.exit());
+
+		for(int i = 0; i < menus.length; i++) {
+	    	menuOptions.get(i).getItems().addAll(allItems.get(i));
+	    }
+		
+        menuBar.getMenus().addAll(menuOptions.get(0), menuOptions.get(1), menuOptions.get(3));
         board.setAlignment(Pos.CENTER);
     	board.setPadding(new Insets(10));
 		board.setHgap(0);
 		board.setVgap(0);	 
 		lines = 1;
+		firstMove = true;
 	}
 	
 	public void start(Stage primaryStage) {		
@@ -132,8 +164,6 @@ public class ChessMate extends Application {
 		
 		setUpPieces(whitePieces, whiteImageViews, imageLocations, indices, true);
 		setUpPieces(blackPieces, blackImageViews, imageLocations, indices, false);
-		
-		
 		
 		addPiecesToBoard(board, whitePieces, whiteImageViews, true);
 		addPiecesToBoard(board, blackPieces, blackImageViews, false);
@@ -477,8 +507,8 @@ public class ChessMate extends Application {
 	public void swapTurns() {
 		player1.playerTurn = !player1.playerTurn;
 		player2.playerTurn = !player2.playerTurn;
-		clock1.update(player1.playerTurn, clock1.time);
-		clock2.update(player2.playerTurn, clock2.time);
+		clock1.update(clock1, player1.playerTurn, clock1.time);
+		clock2.update(clock2, player2.playerTurn, clock2.time);
 	}
 	
 	/**

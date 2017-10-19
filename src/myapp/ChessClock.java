@@ -32,13 +32,15 @@ public class ChessClock{
 		seconds = (int) (this.time % 60);
 		timeDisplay = "" + minutes + ":" + String.format("%02d", seconds);
 		timer = new Timer();
-		update(player.playerTurn, time);
+		update(this, player.playerTurn, time);
 	}
 	
-	public void update(boolean playerTurn, double time) {
+	public void update(ChessClock clock, boolean playerTurn, double time) {
 		if(playerTurn) {
 			//timer = new Timer();
-			timer.schedule(new UpdateClock(this), 0, 1000);
+			System.out.println("allowance: " + timeAllowance);
+			System.out.println("allowance: " + timeAllowance);
+			timer.schedule(new UpdateClock(clock), timeAllowance, 1000);
 		}else {
 			timer.cancel();
 			timer = new Timer();
