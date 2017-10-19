@@ -332,8 +332,6 @@ public class ChessMate extends Application {
 			            		ArrayList<Integer> temp = new ArrayList<>();
 		            			temp.add(col);
 		            			temp.add(10 - row);
-		            			System.out.println("Temp: " + col + " " + row);
-		            			System.out.println("valid moves" + validMoves.toString());
 			            		if(validMoves.contains(temp)) {
 			            			occupied[row-2][col-1] = true;
 				            		movePiece(board, currentPiece, col, row);
@@ -343,10 +341,8 @@ public class ChessMate extends Application {
 			            			String str2 = " ";
 			            			String str = recordMove_algebraic_notation(current, current.col, current.row, col, row, false, false, false, false);
 			            			if(current.isWhite && firstMove){
-			            				System.out.println("1st moved new line");
 			            				str2 = lines++ + ": ";
 			            			}else if(current.isWhite){
-			            				System.out.println("moved new line");
 			            				str2 = "\r\n" + lines++ + ": ";
 			            			}
 			            			saveMovesToFile("" + str2 + str);
@@ -736,7 +732,6 @@ public class ChessMate extends Application {
 		 			for(int j = -1; j <= 1; j++){
 		 				for(int k = -1; k <= 1; k++){
 		 					if(Math.abs(j) != Math.abs(k)){
-		 						System.out.println("i,j,k:" + i + " " + j + " " + k);
 		 						potentialCol = col + j*i;
 		 						potentialRow = row + k*i;
 		 						if(checkInBounds(potentialCol, potentialRow)){
@@ -782,7 +777,6 @@ public class ChessMate extends Application {
 	 						potentialCol = col + j;
 	 						potentialRow = row + k;
 	 						if(checkInBounds(potentialCol, potentialRow)){
-	 							System.out.println((col + j) + " " + (row + k));
 			 					ArrayList<Integer> thisKingMove = new ArrayList<>();
 			 					thisKingMove.add(col + j);
 			 					thisKingMove.add(row + k);
@@ -815,7 +809,6 @@ public class ChessMate extends Application {
 			 temp.add(samePiece.col);
 			 temp.add(10 - samePiece.row);
 			 if(validMoves.contains(temp)) {
-				 System.out.println("temp: " + temp.toString());
 				 validMoves.remove(temp);
 				 if(piece.type == "Bishop" || piece.type == "Rook" || piece.type == "Queen") {
 					 for(int i = 0; i < 8; i++) {
