@@ -268,3 +268,30 @@
 4: Na3 Bd3 Bxd3 f5
 5: Qg5 g6
 6: Bc4 f4
+1: e4 d6
+2: Qg4
+3: Bxg4
+4: f3 Qd7
+5: c4 Qa4
+6: Nc3 Qb3
+1: d4 e6
+2: Nf3 b5
+3: Bh6
+1: c4 d5
+2: e4
+1: d4 e5
+1: e4
+1: c4 d5
+2: c5
+1: d3 c5
+2: Bg5 f6
+3: d4 g4
+1: d4 e5 dxe5 d6
+2: Qd3
+3: dxe5
+4: Nf3 e4
+5: Bh6
+6: exd3
+7: Na3 d2
+8: Nd4
+9: dxe1

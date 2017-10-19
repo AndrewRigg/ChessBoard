@@ -4,44 +4,24 @@
  */
 package myapp;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.ArrayList;
 
-import com.sun.speech.freetts.Voice;
-import com.sun.speech.freetts.VoiceManager;
+import com.sun.speech.freetts.*;
 
-import javafx.application.Application;
-import javafx.application.Platform;
+import javafx.application.*;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.geometry.Rectangle2D;
-import javafx.scene.Node;
-import javafx.scene.Scene;
-import javafx.scene.control.CheckMenuItem;
-import javafx.scene.control.Menu;
-import javafx.scene.control.MenuBar;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.RadioMenuItem;
-import javafx.scene.control.SeparatorMenuItem;
-import javafx.scene.control.ToggleGroup;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
+import javafx.geometry.*;
+import javafx.scene.*;
+import javafx.scene.control.*;
+import javafx.scene.image.*;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-import javafx.scene.text.Font;
-import javafx.scene.text.Text;
-import javafx.stage.Screen;
-import javafx.stage.Stage;
+import javafx.scene.text.*;
+import javafx.stage.*;
 
 public class ChessMate extends Application {
 
@@ -66,7 +46,7 @@ public class ChessMate extends Application {
 	StackPane clockPane1, clockPane2;
 	boolean piecePicked, whiteTurn, alreadySelected, flag;
 	
-	final int IMAGE_TYPES = 6, SQUARE_SIZE = 80, NUMBER_OF_PIECES = 16;
+	final int IMAGE_TYPES = 6, SQUARE_SIZE = 70, NUMBER_OF_PIECES = 16;
 	int [] indices = {5, 2, 0, 4, 1, 0, 2, 5};
 	int [] takenWhiteCounts = {0,0,0,0,0}, takenBlackCounts = {0,0,0,0,0};
 	int lines;
@@ -222,8 +202,8 @@ public class ChessMate extends Application {
 		            				currentPiece = imageViews.get(innerI);
 					            	current = pieces.get(innerI);
 					            	validMoves = getValidMoves(current, current.col, current.row);
+					            	System.out.println(current.type);
 					            	removeOwnColours(pieces, otherPieces, current);
-		            				showMovesOnBoard(validMoves);
 		            				highlightMoves(validMoves);
 		            				alreadySelected = true;
 		            			}
@@ -696,6 +676,7 @@ public class ChessMate extends Application {
 			 		}
 			 		validMoves.add(thisPawnMove);
 		 		}
+		 		
 			 		
 		 		break;
 		 		
@@ -892,6 +873,14 @@ public class ChessMate extends Application {
 					 }
 				 }
 			 }
+			 //Pawn capture added into moves
+			 if((piece.col == oppositePiece.col-1 || piece.col == oppositePiece.col+1) && piece.row == oppositePiece.row + (piece.isWhite? 1 : -1)) {
+				 System.out.println("takeable");
+				 ArrayList<Integer> temp7 = new ArrayList<>();
+				 temp7.add(oppositePiece.col);
+				 temp7.add(10 - oppositePiece.row);
+				 validMoves.add(temp7);
+			 }
 		 }
 	 }
 	 
@@ -920,15 +909,6 @@ public class ChessMate extends Application {
 					}
 				 }
 			 }
-		 }
-	 }
-	 
-	 public void showMovesOnBoard(ArrayList<ArrayList<Integer>> array){
-		 for(ArrayList<Integer> coordinates: array){
-			 //coordinates.get(0);
-			 char a = 'a';
-			 //board.getChildren(). coordinates.get(1); //get board coordinate and change background color
-//			 System.out.println("Coords: ["+ (char)(a+=coordinates.get(0)-1) + ", " + coordinates.get(1) + "]");
 		 }
 	 }
 	 
