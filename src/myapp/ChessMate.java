@@ -44,7 +44,7 @@ public class ChessMate extends Application {
 	Piece current;
 	GridPane board;
 	StackPane clockPane1, clockPane2;
-	boolean piecePicked, whiteTurn, alreadySelected, flag;
+	boolean piecePicked, whiteTurn, alreadySelected, flag, firstMove = true;
 	
 	final int IMAGE_TYPES = 6, SQUARE_SIZE = 70, NUMBER_OF_PIECES = 16;
 	int [] indices = {5, 2, 0, 4, 1, 0, 2, 5};
@@ -202,9 +202,10 @@ public class ChessMate extends Application {
 		            				currentPiece = imageViews.get(innerI);
 					            	current = pieces.get(innerI);
 					            	validMoves = getValidMoves(current, current.col, current.row);
-					            	System.out.println(current.type);
 					            	removeOwnColours(pieces, otherPieces, current);
-		            				highlightMoves(validMoves);
+					            	if(!validMoves.isEmpty()) {
+					            		highlightMoves(validMoves);
+					            	}
 		            				alreadySelected = true;
 		            			}
 		            		
@@ -223,10 +224,13 @@ public class ChessMate extends Application {
 		            			
 			            			movePiece(board, currentPiece, piece.col, piece.row);
 			            			String str2 = " ";
-			            			String str = recordMove_algebraic_notation(current, current.col, current.row, piece.col, piece.row, true, false, false, false);
+			            			String str = " ";
+			            			str = recordMove_algebraic_notation(current, current.col, current.row, piece.col, piece.row, true, false, false, false);
 			            			//String command = getStringCommand(current, current.col, current.row, piece.col, piece.row);
 				            		//speak(command);
-			            			if(piece.isWhite){
+			            			if(current.isWhite && firstMove){
+			            				str2 = lines++ + ": ";
+			            			}else if(current.isWhite){
 			            				str2 = "\r\n" + lines++ + ": ";
 			            			}
 			            			saveMovesToFile("" + str2 + str);
@@ -243,7 +247,8 @@ public class ChessMate extends Application {
 		            				removeHighlights(validMoves);
 		            				validMoves.clear();
 		            			}
-		            			current.unmoved = false;			            		
+		            			current.unmoved = false;	
+		            			firstMove = false;
 		            		}
 		            	}
 		            }
@@ -317,7 +322,7 @@ public class ChessMate extends Application {
 				createCheckerBoard(rec, a, b-1);
 				pane.getChildren().add(rec);
 				
-				if(a > 0 && b > 1 && a < 9 && b < 9){
+				if(a > 0 && b > 1 && a < 9 && b < 10){
 					pane.setOnMouseClicked(new EventHandler<MouseEvent>(){
 			            @Override
 			            public void handle(MouseEvent t) {
@@ -337,7 +342,11 @@ public class ChessMate extends Application {
 				            		occupied[current.row-2][current.col-1] = false;
 			            			String str2 = " ";
 			            			String str = recordMove_algebraic_notation(current, current.col, current.row, col, row, false, false, false, false);
-			            			if(current.isWhite){
+			            			if(current.isWhite && firstMove){
+			            				System.out.println("1st moved new line");
+			            				str2 = lines++ + ": ";
+			            			}else if(current.isWhite){
+			            				System.out.println("moved new line");
 			            				str2 = "\r\n" + lines++ + ": ";
 			            			}
 			            			saveMovesToFile("" + str2 + str);
@@ -353,6 +362,7 @@ public class ChessMate extends Application {
 			            			validMoves.clear();
 			            		}
 			            		current.unmoved = false;
+			            		firstMove = false;
 				            }
 				        }
 			        });
@@ -619,6 +629,10 @@ public class ChessMate extends Application {
 	  * This method allows the moves to be recorded and stored in a .txt file
 	  */
 	 public void saveMovesToFile(String str){
+		 if(firstMove) {
+			 File game = new File("GameFile.txt");
+			 game.delete();
+		 }
 		 try(FileWriter fw = new FileWriter("GameFile.txt", true);
 		    BufferedWriter bw = new BufferedWriter(fw);
 		    PrintWriter out = new PrintWriter(bw))
@@ -660,18 +674,19 @@ public class ChessMate extends Application {
 		 		}else {
 		 			ArrayList<Integer> thisPawnMove = new ArrayList<>();
 			 		if(piece.isWhite){
-			 			potentialCol = col;
-				 		potentialRow = row++;
-				 		if(checkInBounds(potentialCol, potentialRow)){
-				 			thisPawnMove.add(col);
-				 			thisPawnMove.add(row++);
+				 			potentialCol = col;
+					 		potentialRow = row++;
+					 		if(checkInBounds(potentialCol, potentialRow)){
+					 			thisPawnMove.add(col);
+					 			thisPawnMove.add(row);
 				 		}
 			 		}else{
+			 			thisPawnMove.clear();
 			 			potentialCol = col;
 				 		potentialRow = row--;
 				 		if(checkInBounds(potentialCol, potentialRow)){
 				 			thisPawnMove.add(col); 
-				 			thisPawnMove.add(row--);
+				 			thisPawnMove.add(row);
 				 		}
 			 		}
 			 		validMoves.add(thisPawnMove);
@@ -844,30 +859,23 @@ public class ChessMate extends Application {
 						 }
 					 }
 				 }else if(piece.type == "Pawn") {
-					 System.out.println("Here");
 					 validMoves.remove(temp3);
 					 if(piece.isWhite && piece.unmoved) {
-						 System.out.println("oppCol: "+oppositePiece.col + " oppRow: " + (10 - oppositePiece.row+1));
 						 if(piece.col == oppositePiece.col && piece.row == oppositePiece.row+1) {
 							 ArrayList<Integer> temp5 = new ArrayList<>();
 							 temp5.add(oppositePiece.col);
 							 temp5.add(10 - oppositePiece.row+1);
-							 System.out.println("temp5: " + temp5.toString());
 							 if(validMoves.contains(temp5)) {
 								 validMoves.remove(temp5);
-								 System.out.println("contains: " + temp5.toString());
 							 }
 						 }
 					 }else if(piece.unmoved) {
-						 System.out.println("oppBCol: "+oppositePiece.col + " oppBRow: " + (10 - oppositePiece.row-1));
 						 if(piece.col == oppositePiece.col && piece.row == oppositePiece.row-1) {
 							 ArrayList<Integer> temp6 = new ArrayList<>();
 							 temp6.add(oppositePiece.col);
 							 temp6.add(10 - oppositePiece.row - 1);
-							 System.out.println("temp6: " + temp6.toString());
 							 if(validMoves.contains(temp6)) {
 								 validMoves.remove(temp6);
-								 System.out.println("contains: " + temp6.toString());
 							 }
 						 }
 					 }
@@ -875,12 +883,14 @@ public class ChessMate extends Application {
 			 }
 			 //Pawn capture added into moves
 			 if((piece.col == oppositePiece.col-1 || piece.col == oppositePiece.col+1) && piece.row == oppositePiece.row + (piece.isWhite? 1 : -1)) {
-				 System.out.println("takeable");
 				 ArrayList<Integer> temp7 = new ArrayList<>();
 				 temp7.add(oppositePiece.col);
 				 temp7.add(10 - oppositePiece.row);
 				 validMoves.add(temp7);
 			 }
+		 }
+		 if(piece.type == "Pawn" && piece.row == (piece.isWhite ? 2 : 9)) {
+			 validMoves.clear();
 		 }
 	 }
 	 
