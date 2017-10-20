@@ -13,7 +13,6 @@ public class UpdateClock extends TimerTask{
 	
 	public UpdateClock(ChessClock clock) {
 		this.clock = clock;
-		
 	}
 
 	public void run() {

@@ -28,6 +28,7 @@ public class ChessMate extends Application {
 	/**
 	 * Global variables
 	 */
+	Timer timer;
 	Player player1, player2;
 	ChessClock clock1, clock2;
 	BorderPane root;
@@ -45,7 +46,6 @@ public class ChessMate extends Application {
 	ImageView currentPiece;
 	Piece current;
 	GridPane board;
-	StackPane clockPane1, clockPane2;
 	boolean piecePicked, whiteTurn, alreadySelected, flag, firstMove;
 	final int IMAGE_TYPES = 6, SQUARE_SIZE = 70, NUMBER_OF_PIECES = 16;
 	int [] indices = {5, 2, 0, 4, 1, 0, 2, 5}, takenWhiteCounts = {0,0,0,0,0}, takenBlackCounts = {0,0,0,0,0};
@@ -66,8 +66,7 @@ public class ChessMate extends Application {
 		player1.playerTurn = true;
 		root = new BorderPane();
 		board = new GridPane();
-		clock1 = new ChessClock(ClockMode.CUSTOM, player1, 5, 10);
-		clock2 = new ChessClock(ClockMode.CUSTOM, player2, 10, 20); 
+		
 		
 		menuBar = new MenuBar();
 		
@@ -179,6 +178,7 @@ public class ChessMate extends Application {
 		primaryStage.setHeight(primaryScreenBounds.getHeight());
 		primaryStage.setTitle("ChessMate");
 		primaryStage.show(); 
+		
 	}
 	
 	/**
@@ -344,6 +344,7 @@ public class ChessMate extends Application {
 	 */
 	public void setUpBoard(){
 		char start = 'a';
+		
 		for(int a = 0; a < 10; a++) {
 			for(int b = 0; b < 13; b++) {
 				StackPane pane = new StackPane();
@@ -396,18 +397,32 @@ public class ChessMate extends Application {
 		
 				//Add clock1 to top left of board
 				if(a == 0 && b == 0) {
-					pane.setAlignment(Pos.TOP_LEFT);
-					updateBoard(pane, player1, clock1);
-					pane.getChildren().add(updateClockOnBoard(player1, clock1));
-					//pane = clockPane1;
+					clock1 = new ChessClock(ClockMode.CUSTOM, player1, 0, 10);
+					pane.setAlignment(Pos.TOP_RIGHT);
+					updateClockOnBoard(pane, player1, clock1);
+					  Platform.runLater(new Runnable() {
+		                  @Override public void run() {
+		                    System.out.println("Task finsished");
+		                    updateClockOnBoard(pane, player1, clock1);
+		                    System.out.println("Task finsished");     
+		                  }
+		                });     
+					
 				}
 				
 				//Add clock2 to top right of board
 				if(a == 9 && b == 0) {
-					pane.setAlignment(Pos.TOP_RIGHT);
-					updateBoard(pane, player2, clock2);
-					pane.getChildren().add(updateClockOnBoard(player2, clock2));
-					//pane = clockPane2;
+					clock2 = new ChessClock(ClockMode.CUSTOM, player2, 0, 20); 
+					pane.setAlignment(Pos.TOP_LEFT);
+					updateClockOnBoard(pane, player2, clock2);
+					
+					  Platform.runLater(new Runnable() {
+		                  @Override public void run() {
+		                    System.out.println("Task finsished");
+		                    updateClockOnBoard(pane, player2, clock2);
+		                    System.out.println("Task finsished");     
+		                  }
+		                });
 				}
 				
 				//Add row labels
@@ -456,6 +471,9 @@ public class ChessMate extends Application {
 		}
 	}
 	
+	
+	
+	
 	public void setInitialOccupiedGrid(){
 		for(int j = 0; j < 8; j++){
 			occupied[0][j] = true;
@@ -489,7 +507,8 @@ public class ChessMate extends Application {
 	 * @param clock
 	 * @return
 	 */
-	public Text updateClockOnBoard(Player player, ChessClock clock) {
+	public void updateClockOnBoard(StackPane pane, Player player, ChessClock clock) {
+		pane.getChildren().remove(pane.getChildren().size()-1);
 		Text text = new Text(player.name + ": " + clock.timeDisplay);
 		text.setFont(Font.font ("Verdana", 20));
 		if(player.playerTurn){
@@ -497,7 +516,7 @@ public class ChessMate extends Application {
 		}else {
 			text.setFill(Color.BLACK);
 		}
-		return text;
+		pane.getChildren().add(text);
 	}
 	
 	/**
@@ -507,18 +526,17 @@ public class ChessMate extends Application {
 	public void swapTurns() {
 		player1.playerTurn = !player1.playerTurn;
 		player2.playerTurn = !player2.playerTurn;
+		ObservableList<Node> children = board.getChildren();
+		for(Node node: children){
+			if(GridPane.getRowIndex(node) == 0 && GridPane.getColumnIndex(node) == 0){
+				updateClockOnBoard((StackPane) node, player1, clock1);
+			}else if(GridPane.getRowIndex(node) == 0 && GridPane.getColumnIndex(node) == 9) {
+				updateClockOnBoard((StackPane) node, player2, clock2);
+			}
+		}
+		
 		clock1.update(clock1, player1.playerTurn, clock1.time);
 		clock2.update(clock2, player2.playerTurn, clock2.time);
-	}
-	
-	/**
-	 * Update timers on the board
-	 * @param pane
-	 * @param player
-	 * @param clock
-	 */
-	public void updateBoard(StackPane pane, Player player, ChessClock clock) {
-		updateClockOnBoard(player, clock);
 	}
 	
 	/**

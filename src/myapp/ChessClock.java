@@ -23,7 +23,7 @@ public class ChessClock{
 	public ChessClock(ClockMode mode, Player player, int timeAllowance, double time) {
 		this.mode = mode;
 		this.player = player;
-		this.timeAllowance = timeAllowance;
+		this.timeAllowance = 1000*timeAllowance;
 		if(time != 0) {
 			mode.setTime(time);
 		}
@@ -37,9 +37,6 @@ public class ChessClock{
 	
 	public void update(ChessClock clock, boolean playerTurn, double time) {
 		if(playerTurn) {
-			//timer = new Timer();
-			System.out.println("allowance: " + timeAllowance);
-			System.out.println("allowance: " + timeAllowance);
 			timer.schedule(new UpdateClock(clock), timeAllowance, 1000);
 		}else {
 			timer.cancel();
