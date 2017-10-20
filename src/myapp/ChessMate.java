@@ -46,7 +46,7 @@ public class ChessMate extends Application {
 	ImageView currentPiece;
 	Piece current;
 	GridPane board;
-	boolean piecePicked, whiteTurn, alreadySelected, flag, firstMove;
+	boolean piecePicked, whiteTurn, alreadySelected, flag, firstMove, castling;
 	final int IMAGE_TYPES = 6, SQUARE_SIZE = 70, NUMBER_OF_PIECES = 16;
 	int [] indices = {5, 2, 0, 4, 1, 0, 2, 5}, takenWhiteCounts = {0,0,0,0,0}, takenBlackCounts = {0,0,0,0,0};
 	int lines;
@@ -255,7 +255,7 @@ public class ChessMate extends Application {
 			            			movePiece(board, currentPiece, piece.col, piece.row);
 			            			String str2 = " ";
 			            			String str = " ";
-			            			str = recordMove_algebraic_notation(current, current.col, current.row, piece.col, piece.row, true, false, false, false);
+			            			str = recordMove_algebraic_notation(current, current.col, current.row, piece.col, piece.row, true, false, false, false, false);
 			            			//String command = getStringCommand(current, current.col, current.row, piece.col, piece.row);
 				            		//speak(command);
 			            			if(current.isWhite && firstMove){
@@ -267,6 +267,8 @@ public class ChessMate extends Application {
 			            			piece.taken = true;
 			            			current.col = piece.col;
 			            			current.row = piece.row;
+			            			current.unmoved = false;	
+			            			firstMove = false;
 			            			piece.col = tempPos[0];
 			            			piece.row = tempPos[1];
 			            			alreadySelected = false;
@@ -277,8 +279,6 @@ public class ChessMate extends Application {
 		            				removeHighlights(validMoves);
 		            				validMoves.clear();
 		            			}
-		            			current.unmoved = false;	
-		            			firstMove = false;
 		            		}
 		            	}
 		            }
@@ -357,6 +357,7 @@ public class ChessMate extends Application {
 					pane.setOnMouseClicked(new EventHandler<MouseEvent>(){
 			            @Override
 			            public void handle(MouseEvent t) {
+			            	castling = false;
 			            	int col = GridPane.getColumnIndex(pane);
 		            		int row = GridPane.getRowIndex(pane);
 			            	if(piecePicked && !occupied[row-2][col-1]) {
@@ -366,11 +367,35 @@ public class ChessMate extends Application {
 			            		if(validMoves.contains(temp)) {
 			            			occupied[row-2][col-1] = true;
 				            		movePiece(board, currentPiece, col, row);
+				            		if(current.type.equals("King") && Math.abs(current.col - col) == 2) {
+				            			//Queen side castling
+				            			System.out.println("Inside castling");
+				            			castling = true;
+				            			ArrayList<ImageView> thesePieces = (current.isWhite? whiteImageViews : blackImageViews);
+				            			ArrayList<Piece> rooks = (current.isWhite? whitePieces : blackPieces);
+				            			if(col < 5) {
+				            				System.out.println("Castling qs!");
+				            				
+				            				movePiece(board, thesePieces.get(0), col+1, row);
+				            				rooks.get(0).unmoved = false;
+				            				occupied[row-2][0] = false;
+				            				occupied[row-2][3] = true;
+				            				rooks.get(0).col = col+1;
+				            			}else {
+				            			//King side castling
+				            				System.out.println("Castling ks!");
+				            				movePiece(board, thesePieces.get(7), col-1, row);
+				            				rooks.get(7).unmoved = false;
+				            				occupied[row-2][7] = false;
+				            				occupied[row-2][5] = true;
+				            				rooks.get(7).col = col-1;
+				            			}
+				            		}
 				            		//String command = getStringCommand(current, current.col, current.row, col, row);
 				            		//speak(command);
 				            		occupied[current.row-2][current.col-1] = false;
 			            			String str2 = " ";
-			            			String str = recordMove_algebraic_notation(current, current.col, current.row, col, row, false, false, false, false);
+			            			String str = recordMove_algebraic_notation(current, current.col, current.row, col, row, false, false, false, false, castling);
 			            			if(current.isWhite && firstMove){
 			            				str2 = lines++ + ": ";
 			            			}else if(current.isWhite){
@@ -379,6 +404,8 @@ public class ChessMate extends Application {
 			            			saveMovesToFile("" + str2 + str);
 			            			current.col = col;
 				            		current.row = row;
+				            		current.unmoved = false;
+				            		firstMove = false;
 				            		piecePicked = false;
 				            		alreadySelected = false;
 				            		showOccupied();	
@@ -388,8 +415,6 @@ public class ChessMate extends Application {
 			            			removeHighlights(validMoves);
 			            			validMoves.clear();
 			            		}
-			            		current.unmoved = false;
-			            		firstMove = false;
 				            }
 				        }
 			        });
@@ -635,7 +660,7 @@ public class ChessMate extends Application {
 	  * @param args
 	  */
 	 public String recordMove_algebraic_notation(Piece piece, int colFrom, int rowFrom, int colTo, int rowTo, 
-			 boolean capture, boolean ambiguousCol, boolean ambiguousRow, boolean ambiguousBoth){
+			 boolean capture, boolean ambiguousCol, boolean ambiguousRow, boolean ambiguousBoth, boolean castling){
 		 String move = "";
 		 //Could create method to determine if it will be ambiguous or not, this would 
 		 //require knowing all the potential squares which identical pieces can move to
@@ -818,7 +843,7 @@ public class ChessMate extends Application {
 		 		//Could have a boolean for whether castling is an option for each
 		 		//side which would include whether the two pieces are in the right places, 
 		 		//whether they have moved, if the squares in between are free, 
-		 		//and whether the move would put the King across check
+		 		//and whether the move would put the King across check		***This part is hard
 	 			for(int j = -1; j <= 1; j++){
 	 				for(int k = -1; k <= 1; k++){
 	 					if(!(j == 0 && k == 0)){
@@ -831,6 +856,54 @@ public class ChessMate extends Application {
 			 					validMoves.add(thisKingMove);
 	 						}
 	 					}
+	 				}
+	 			}
+	 			if(piece.unmoved) {
+	 				//for each rook
+	 				ArrayList<Integer> castlingMove = new ArrayList<>();
+ 					ArrayList<Piece> pieces = (piece.isWhite? whitePieces : blackPieces);
+ 					System.out.println("INside piece unmoved");
+ 					
+ 					//*****Need to add check for 'moving across Check' *****
+	 				if(pieces.get(0).unmoved) 
+	 				{
+	 					System.out.println("INside qs rook unmoved");
+	 					boolean queenSide = true;
+	 					//if there are free spaces on both spaces to the left of king
+	 					ObservableList<Node> children = board.getChildren();
+						for(Node node: children){
+							if((GridPane.getColumnIndex(node) == col - 1 || GridPane.getColumnIndex(node) == col - 2 ||  GridPane.getColumnIndex(node) == col-3) && GridPane.getRowIndex(node) == 10 - row){
+								if(node instanceof ImageView) {
+									queenSide = false;
+									System.out.println("Image in the way qs");
+								}
+							}
+						}
+						 if(queenSide) {
+							castlingMove.add(col-2);
+	 	 					castlingMove.add(row);
+	 						validMoves.add(castlingMove);
+						 }
+	 				}
+	 				if(pieces.get(7).unmoved)
+	 				{
+	 					System.out.println("INside ks rook unmoved");
+	 					boolean kingSide = true;
+	 					//if there are free spaces on both spaces to the right of king
+	 					ObservableList<Node> children = board.getChildren();
+						for(Node node: children){
+							if((GridPane.getColumnIndex(node) == col + 1 || GridPane.getColumnIndex(node) == col + 2) && GridPane.getRowIndex(node) == 10 - row){
+								if(node instanceof ImageView) {
+									kingSide = false;
+									System.out.println("Image in the way ks");
+								}
+							}
+						}
+						 if(kingSide) {
+							castlingMove.add(col+2);
+	 	 					castlingMove.add(row);
+	 						validMoves.add(castlingMove);
+						 }
 	 				}
 	 			}
 		 		break;
@@ -875,7 +948,29 @@ public class ChessMate extends Application {
 						 }
 					 }
 				 }
-			 }
+					 else if(piece.type == "Pawn") {
+						 validMoves.remove(temp);
+						 if(piece.isWhite && piece.unmoved) {
+							 if(piece.col == samePiece.col && piece.row == samePiece.row+1) {
+								 ArrayList<Integer> temp5 = new ArrayList<>();
+								 temp5.add(samePiece.col);
+								 temp5.add(10 - samePiece.row+1);
+								 if(validMoves.contains(temp5)) {
+									 validMoves.remove(temp5);
+								 }
+							 }
+						 }else if(piece.unmoved) {
+							 if(piece.col == samePiece.col && piece.row == samePiece.row-1) {
+								 ArrayList<Integer> temp6 = new ArrayList<>();
+								 temp6.add(samePiece.col);
+								 temp6.add(10 - samePiece.row - 1);
+								 if(validMoves.contains(temp6)) {
+									 validMoves.remove(temp6);
+								 }
+							 }
+						 }
+					 }
+				 }
 		 }
 		 //Here try to prevent certain pieces jumping over pieces of opposite colour
 		 for(Piece oppositePiece: otherPieces) {
@@ -923,13 +1018,17 @@ public class ChessMate extends Application {
 				 }
 			 }
 			 //Pawn capture added into moves
-			 if((piece.col == oppositePiece.col-1 || piece.col == oppositePiece.col+1) && piece.row == oppositePiece.row + (piece.isWhite? 1 : -1)) {
+			 if(piece.type == "Pawn" && (piece.col == oppositePiece.col-1 || piece.col == oppositePiece.col+1) && piece.row == oppositePiece.row + (piece.isWhite? 1 : -1)) {
 				 ArrayList<Integer> temp7 = new ArrayList<>();
 				 temp7.add(oppositePiece.col);
 				 temp7.add(10 - oppositePiece.row);
 				 validMoves.add(temp7);
 			 }
 		 }
+		 		 
+		 
+		 //Remove square in front of pawn (just off the board) 
+		 //when it has reached the end from the valid moves list
 		 if(piece.type == "Pawn" && piece.row == (piece.isWhite ? 2 : 9)) {
 			 validMoves.clear();
 		 }
