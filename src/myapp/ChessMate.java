@@ -46,7 +46,8 @@ public class ChessMate extends Application {
 	ImageView currentPiece;
 	Piece current;
 	GridPane board;
-	boolean piecePicked, whiteTurn, alreadySelected, flag, firstMove, castling;
+	Button voiceCommand;
+	boolean piecePicked, whiteTurn, alreadySelected, flag, firstMove, castling, check, checkMate;
 	final int IMAGE_TYPES = 6, SQUARE_SIZE = 70, NUMBER_OF_PIECES = 16;
 	int [] indices = {5, 2, 0, 4, 1, 0, 2, 5}, takenWhiteCounts = {0,0,0,0,0}, takenBlackCounts = {0,0,0,0,0};
 	int lines;
@@ -60,13 +61,32 @@ public class ChessMate extends Application {
 	 * Constructor to initialise the chess board, players, clocks, menus
 	 * pieces, images and values.
 	 */
+	
 	public ChessMate () {
-		player1 = new Player("Player1", PlayerType.HUMAN, 0);
-		player2 = new Player("Player2", PlayerType.CPU, 0);
+		this(new Player("Player1", PlayerType.HUMAN, 0), new Player("Player2", PlayerType.CPU, 0));
+	}
+	
+	public ChessMate (Player player1, Player player2) {
+		this(player1, player2, new ChessClock(ClockMode.OFF, player1), new ChessClock(ClockMode.OFF, player2));
+	}
+	
+	public ChessMate (Player player1, Player player2, ChessClock clock1, ChessClock clock2) {
+		//player1 = new Player("Player1", PlayerType.HUMAN, 0);
+		//player2 = new Player("Player2", PlayerType.CPU, 0);
+		this.player1 = player1;
+		this.player2 = player2;
 		player1.playerTurn = true;
+		
+		this.clock1 = clock1;
+		this.clock2 = clock2;
+//		clock1 = new ChessClock(ClockMode.SPEED, player1);
+//		clock2 = new ChessClock(ClockMode.SPEED, player2, 0, 20); 
+		
+		this.clock1 = clock1;
+		this.clock2 = clock2;
+		
 		root = new BorderPane();
 		board = new GridPane();
-		
 		
 		menuBar = new MenuBar();
 		
@@ -136,6 +156,32 @@ public class ChessMate extends Application {
 	    	menuOptions.get(i).getItems().addAll(allItems.get(i));
 	    }
 		
+		voiceCommand = new Button("Voice Command");
+		voiceCommand.setOnAction(new EventHandler<ActionEvent>() {
+		    @Override public void handle(ActionEvent e) {
+		    	String s = "";
+		    	long timeStart = System.currentTimeMillis();
+		    	try {
+		    		System.out.println("This is here");
+					Process p = Runtime.getRuntime().exec("python C:\\Users\\Andrew\\Documents\\GitHub\\ChessBoard\\src\\myapp\\py_speech_stream.py");
+					BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
+					System.out.println("here is python output: ");
+					System.out.println("time diff: "+ (System.currentTimeMillis()-timeStart));
+					while((s = stdInput.readLine()) != null && (System.currentTimeMillis()-timeStart) < 3000) {
+						System.out.println(s);
+					}
+					 createMoveFromText();
+					 //System.exit(0);
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					System.err.print("Could not run python code!");
+					e1.printStackTrace();
+				}
+		    }
+		    
+		    //now handle the text to make the move
+		   
+		});
         menuBar.getMenus().addAll(menuOptions.get(0), menuOptions.get(1), menuOptions.get(3));
         board.setAlignment(Pos.CENTER);
     	board.setPadding(new Insets(10));
@@ -169,6 +215,7 @@ public class ChessMate extends Application {
 			
 		board.setStyle("-fx-background-color: #336699;");
 		root.setCenter(board);
+		root.setBottom(voiceCommand);
 		BorderPane.setAlignment(board,Pos.CENTER);
 		Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
 		primaryStage.setScene(new Scene(root));
@@ -231,7 +278,7 @@ public class ChessMate extends Application {
 		            			if(!alreadySelected) {
 		            				currentPiece = imageViews.get(innerI);
 					            	current = pieces.get(innerI);
-					            	validMoves = getValidMoves(current, current.col, current.row);
+					            	validMoves = getValidMoves(current);
 					            	removeOwnColours(pieces, otherPieces, current);
 					            	if(!validMoves.isEmpty()) {
 					            		highlightMoves(validMoves);
@@ -256,7 +303,7 @@ public class ChessMate extends Application {
 			            			String str2 = " ";
 			            			String str = " ";
 			            			str = recordMove_algebraic_notation(current, current.col, current.row, piece.col, piece.row, true, false, false, false, false);
-			            			//String command = getStringCommand(current, current.col, current.row, piece.col, piece.row);
+			            			//String command = getStringCommand(current, current.col, current.row, piece.col, piece.row, true, false);
 				            		//speak(command);
 			            			if(current.isWhite && firstMove){
 			            				str2 = lines++ + ": ";
@@ -279,7 +326,9 @@ public class ChessMate extends Application {
 		            				removeHighlights(validMoves);
 		            				validMoves.clear();
 		            			}
+		            			System.out.println("Check: "+ detectCheck(pieces.get(5), pieces, otherPieces));
 		            		}
+		            		
 		            	}
 		            }
 	            }
@@ -287,6 +336,23 @@ public class ChessMate extends Application {
 			imageViews.add(imageView);
 		}
 	}
+	
+	public void createMoveFromText() throws IOException{
+		
+		@SuppressWarnings("resource")
+		BufferedReader brTest = new BufferedReader(new FileReader("out.txt"));
+		String text = brTest.readLine();
+		// Stop. text is the first line.
+		System.out.println("This is the interpreted python text");
+		String[] strArray = text.split(",");
+		System.out.println(Arrays.toString(strArray));
+		
+		for(String s: strArray) {
+			
+			System.out.println("Str "+ s);
+		}
+	}
+	
 	
 	public void showOccupied(){
 		System.out.println("Occupied: ");
@@ -362,6 +428,9 @@ public class ChessMate extends Application {
 		            		int row = GridPane.getRowIndex(pane);
 			            	if(piecePicked && !occupied[row-2][col-1]) {
 			            		ArrayList<Integer> temp = new ArrayList<>();
+			            		ArrayList<ImageView> theseImages = (current.isWhite? whiteImageViews : blackImageViews);
+			            		ArrayList<Piece> otherPieces = (current.isWhite? blackPieces : whitePieces);
+		            			ArrayList<Piece> thesePieces = (current.isWhite? whitePieces : blackPieces);
 		            			temp.add(col);
 		            			temp.add(10 - row);
 			            		if(validMoves.contains(temp)) {
@@ -369,29 +438,24 @@ public class ChessMate extends Application {
 				            		movePiece(board, currentPiece, col, row);
 				            		if(current.type.equals("King") && Math.abs(current.col - col) == 2) {
 				            			//Queen side castling
-				            			System.out.println("Inside castling");
 				            			castling = true;
-				            			ArrayList<ImageView> thesePieces = (current.isWhite? whiteImageViews : blackImageViews);
-				            			ArrayList<Piece> rooks = (current.isWhite? whitePieces : blackPieces);
+				            			
 				            			if(col < 5) {
-				            				System.out.println("Castling qs!");
-				            				
-				            				movePiece(board, thesePieces.get(0), col+1, row);
-				            				rooks.get(0).unmoved = false;
+				            				movePiece(board, theseImages.get(0), col+1, row);
+				            				thesePieces.get(0).unmoved = false;
 				            				occupied[row-2][0] = false;
 				            				occupied[row-2][3] = true;
-				            				rooks.get(0).col = col+1;
+				            				thesePieces.get(0).col = col+1;
 				            			}else {
 				            			//King side castling
-				            				System.out.println("Castling ks!");
-				            				movePiece(board, thesePieces.get(7), col-1, row);
-				            				rooks.get(7).unmoved = false;
+				            				movePiece(board, theseImages.get(7), col-1, row);
+				            				thesePieces.get(7).unmoved = false;
 				            				occupied[row-2][7] = false;
 				            				occupied[row-2][5] = true;
-				            				rooks.get(7).col = col-1;
+				            				thesePieces.get(7).col = col-1;
 				            			}
 				            		}
-				            		//String command = getStringCommand(current, current.col, current.row, col, row);
+				            		//String command = getStringCommand(current, current.col, current.row, col, row, false, castling);
 				            		//speak(command);
 				            		occupied[current.row-2][current.col-1] = false;
 			            			String str2 = " ";
@@ -415,6 +479,7 @@ public class ChessMate extends Application {
 			            			removeHighlights(validMoves);
 			            			validMoves.clear();
 			            		}
+			            		System.out.println("Check: "+ detectCheck(otherPieces.get(5), otherPieces, thesePieces));
 				            }
 				        }
 			        });
@@ -422,30 +487,27 @@ public class ChessMate extends Application {
 		
 				//Add clock1 to top left of board
 				if(a == 0 && b == 0) {
-					clock1 = new ChessClock(ClockMode.CUSTOM, player1, 0, 10);
+					//clock1 = new ChessClock(ClockMode.CUSTOM, player1, 0, 10);
+					//clock1 = new ChessClock(ClockMode.OFF, player1);
+					
 					pane.setAlignment(Pos.TOP_RIGHT);
 					updateClockOnBoard(pane, player1, clock1);
 					  Platform.runLater(new Runnable() {
 		                  @Override public void run() {
-		                    System.out.println("Task finsished");
-		                    updateClockOnBoard(pane, player1, clock1);
-		                    System.out.println("Task finsished");     
+		                    updateClockOnBoard(pane, player1, clock1);  
 		                  }
-		                });     
-					
+		                });   
 				}
 				
 				//Add clock2 to top right of board
 				if(a == 9 && b == 0) {
-					clock2 = new ChessClock(ClockMode.CUSTOM, player2, 0, 20); 
+					//clock2 = new ChessClock(ClockMode.OFF, player2, 0, 20); 
 					pane.setAlignment(Pos.TOP_LEFT);
 					updateClockOnBoard(pane, player2, clock2);
 					
 					  Platform.runLater(new Runnable() {
 		                  @Override public void run() {
-		                    System.out.println("Task finsished");
-		                    updateClockOnBoard(pane, player2, clock2);
-		                    System.out.println("Task finsished");     
+		                    updateClockOnBoard(pane, player2, clock2); 
 		                  }
 		                });
 				}
@@ -533,15 +595,17 @@ public class ChessMate extends Application {
 	 * @return
 	 */
 	public void updateClockOnBoard(StackPane pane, Player player, ChessClock clock) {
-		pane.getChildren().remove(pane.getChildren().size()-1);
-		Text text = new Text(player.name + ": " + clock.timeDisplay);
-		text.setFont(Font.font ("Verdana", 20));
-		if(player.playerTurn){
-			text.setFill(Color.RED);
-		}else {
-			text.setFill(Color.BLACK);
+		if(!(clock.mode == ClockMode.OFF)) {
+			pane.getChildren().remove(pane.getChildren().size()-1);
+			Text text = new Text(player.name + ": " + clock.timeDisplay);
+			text.setFont(Font.font ("Verdana", 20));
+			if(player.playerTurn){
+				text.setFill(Color.RED);
+			}else {
+				text.setFill(Color.BLACK);
+			}
+			pane.getChildren().add(text);
 		}
-		pane.getChildren().add(text);
 	}
 	
 	/**
@@ -559,9 +623,14 @@ public class ChessMate extends Application {
 				updateClockOnBoard((StackPane) node, player2, clock2);
 			}
 		}
-		
-		clock1.update(clock1, player1.playerTurn, clock1.time);
+		if(!(clock1.mode == ClockMode.OFF)) {
+			clock1.update(clock1, player1.playerTurn, clock1.time);
+		}
+		if(!(clock2.mode == ClockMode.OFF)) {
 		clock2.update(clock2, player2.playerTurn, clock2.time);
+		}
+		
+		
 	}
 	
 	/**
@@ -629,6 +698,57 @@ public class ChessMate extends Application {
 	}
 	
 	/**
+	 * Determine whether the king is in check (i.e. an opposite piece is attacking it)
+	 * @param king
+	 * @param pieces
+	 * @param oppositePieces
+	 * @return
+	 */
+	public boolean detectCheck(Piece king, ArrayList<Piece> pieces, ArrayList<Piece> oppositePieces) {
+		ArrayList<Integer> kingCoordinates = new ArrayList<>();
+		kingCoordinates.add(king.col-1);
+		kingCoordinates.add(10 - king.row);
+		System.out.println("king coords: " + (king.col-1) + " " + (10 - king.row));
+		check = false;
+		for(Piece opposite: oppositePieces) {
+			validMoves = getValidMoves(opposite);
+			removeOwnColours(oppositePieces, pieces, opposite);
+			if(validMoves.contains(kingCoordinates)){
+				check = true;
+			}
+			System.out.println("valid move coords for " + opposite.getType() + ": " + validMoves.toString());
+			validMoves.clear();
+		}
+//		if(check) {
+//			checkMate = detectCheckMate(king, pieces, oppositePieces);
+//		}
+		return check;
+	}
+	
+	/**
+	 * Determine whether the king is in checkmate.  This returning true signifies the end of the game.
+	 * @param king
+	 * @param pieces
+	 * @param oppositePieces
+	 * @return
+	 */
+	public boolean detectCheckMate(Piece king, ArrayList<Piece> pieces, ArrayList<Piece> oppositePieces) {
+		ArrayList<Integer> kingCoordinates = new ArrayList<>();
+		kingCoordinates.add(king.col-1);
+		kingCoordinates.add(10 - king.row);
+		checkMate = false;
+		for(Piece opposite: oppositePieces) {
+			validMoves = getValidMoves(opposite);
+			removeOwnColours(oppositePieces, pieces, opposite);
+			if(validMoves.contains(kingCoordinates)){
+				check = true;
+			}
+			validMoves.clear();
+		}
+		return checkMate;
+	}
+	
+	/**
 	 * Set the string to be read out by the text-to-speech program
 	 * (this allows the CPU to let the player know what has been moved)
 	 * @param piece
@@ -638,8 +758,21 @@ public class ChessMate extends Application {
 	 * @param rowTo
 	 * @return
 	 */
-	public String getStringCommand(Piece piece,  int colFrom, int rowFrom,  int colTo, int rowTo){
-		return (piece.getType() + " from " + cols.get(colFrom-1) + rows.get(9-rowFrom) + " to " +  cols.get(colTo-1) + rows.get(9-rowTo));
+	public String getStringCommand(Piece piece,  int colFrom, int rowFrom,  int colTo, int rowTo, boolean capture, boolean castling){
+		String command = "";
+		if(castling) {
+			if(colTo < 5) {
+				command = "Queenside Castle";
+			}else {
+				command = "Kingside Castle";
+			}
+		}else {
+			command = piece.getType() + " from " + cols.get(colFrom-1) + rows.get(9-rowFrom) + " to " +  cols.get(colTo-1) + rows.get(9-rowTo);
+		}
+		if (capture) {
+			command += "Capture";
+		}
+		return command;
 	}
 	
 	/**
@@ -691,6 +824,12 @@ public class ChessMate extends Application {
 			 move += "x";
 		 }
 		 move += "" + cols.get((colTo-1)) + rows.get(9-rowTo);
+		 if(castling) {
+			 move = "0-0";
+			 if(colTo == 3) {
+				 move += "-0";
+			 }
+		 }
 		 return move;
 	 }
 	 
@@ -718,14 +857,15 @@ public class ChessMate extends Application {
 	  * @param row
 	  * @return
 	  */
-	 public ArrayList<ArrayList<Integer>>getValidMoves(Piece piece, int col, int row){
+	 public ArrayList<ArrayList<Integer>>getValidMoves(Piece piece){
 		 int potentialCol;
 		 int potentialRow;
-		 row = 10 - row;
+		 int col = piece.col;
+		 int row = 10 - piece.row;
 		 switch (piece.type){
 		 	case "Pawn":
 		 		
-		 		//Need to add diagonal taking, en passant and promoting
+		 		//Need en passant and promoting
 		 		if(piece.unmoved) {
 		 			potentialCol = col;
 			 		potentialRow = row;
@@ -862,12 +1002,10 @@ public class ChessMate extends Application {
 	 				//for each rook
 	 				ArrayList<Integer> castlingMove = new ArrayList<>();
  					ArrayList<Piece> pieces = (piece.isWhite? whitePieces : blackPieces);
- 					System.out.println("INside piece unmoved");
  					
  					//*****Need to add check for 'moving across Check' *****
 	 				if(pieces.get(0).unmoved) 
 	 				{
-	 					System.out.println("INside qs rook unmoved");
 	 					boolean queenSide = true;
 	 					//if there are free spaces on both spaces to the left of king
 	 					ObservableList<Node> children = board.getChildren();
@@ -875,7 +1013,6 @@ public class ChessMate extends Application {
 							if((GridPane.getColumnIndex(node) == col - 1 || GridPane.getColumnIndex(node) == col - 2 ||  GridPane.getColumnIndex(node) == col-3) && GridPane.getRowIndex(node) == 10 - row){
 								if(node instanceof ImageView) {
 									queenSide = false;
-									System.out.println("Image in the way qs");
 								}
 							}
 						}
@@ -887,7 +1024,6 @@ public class ChessMate extends Application {
 	 				}
 	 				if(pieces.get(7).unmoved)
 	 				{
-	 					System.out.println("INside ks rook unmoved");
 	 					boolean kingSide = true;
 	 					//if there are free spaces on both spaces to the right of king
 	 					ObservableList<Node> children = board.getChildren();
@@ -895,7 +1031,6 @@ public class ChessMate extends Application {
 							if((GridPane.getColumnIndex(node) == col + 1 || GridPane.getColumnIndex(node) == col + 2) && GridPane.getRowIndex(node) == 10 - row){
 								if(node instanceof ImageView) {
 									kingSide = false;
-									System.out.println("Image in the way ks");
 								}
 							}
 						}

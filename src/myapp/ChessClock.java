@@ -16,6 +16,10 @@ public class ChessClock{
 	String timeDisplay = "";
 	Timer timer; 
 	
+	public ChessClock(ClockMode mode, Player player) {
+		this(mode, player, 0);
+	}
+	
 	public ChessClock(ClockMode mode, Player player, int timeAllowance) {
 		this(mode, player, timeAllowance, 0);
 	}

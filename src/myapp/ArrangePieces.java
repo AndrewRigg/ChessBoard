@@ -17,4 +17,9 @@ package myapp;
  */
 public class ArrangePieces {
 
+	Piece [][] mixedPieces = new Piece [10][10];
+	
+	public ArrangePieces() {
+		
+	}
 }
