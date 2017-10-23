@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="src" path="input_output"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
 	<classpathentry kind="con" path="org.eclipse.fx.ide.jdt.core.JAVAFX_CONTAINER"/>
 	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/GitHub/TTS/freetts-1.2/lib/cmu_time_awb.jar"/>
@@ -15,5 +14,18 @@
 	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/GitHub/TTS/freetts-1.2/lib/mbrola.jar"/>
 	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/GitHub/TTS/gtranslateapi-1.0.jar"/>
 	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/GitHub/TTS/jl1.0.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/GitHub/JArduino/jarduino.samples/lib/jcommon-1.0.15.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/GitHub/JArduino/jarduino.samples/lib/jcommon-1.0.16.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/GitHub/JArduino/jarduino.samples/lib/jfreechart-1.0.13.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/GitHub/JArduino/jarduino.samples/lib/org.jivesoftware.smack-3.2.2.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/GitHub/JArduino/jarduino.samples/lib/org.jivesoftware.smackx-3.2.2.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/GitHub/JArduino/jarduino.samples/lib/org.jivesoftware.smackx-debug-3.2.2.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/GitHub/JArduino/jarduino.samples/lib/org.jivesoftware.smackx-jingle-3.2.2.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/GitHub/JArduino/jarduino.samples/lib/org.kevoree.extra.osgi.rxtx-2.2.0.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/GitHub/JArduino/jarduino.samples/lib/org.sintef.jarduino.bluetooth-0.1.7-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/GitHub/JArduino/jarduino.samples/lib/org.sintef.jarduino.core-0.1.7-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/GitHub/JArduino/jarduino.samples/lib/org.sintef.jarduino.gui-0.1.7-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/GitHub/JArduino/jarduino.samples/lib/org.sintef.jarduino.serial-0.1.7-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/GitHub/JArduino/jarduino.samples/lib/twitter4j-core-2.2.2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
