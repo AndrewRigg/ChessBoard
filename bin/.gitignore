@@ -1,15 +1,6 @@
-/myapp/
-/res/
-/chessclock/
-/clock/
-/guis/
-/chessobjects/
-/chessengine/
-/chesscomms/
+/files/
+/main/
 /speech/
 /interfaces/
-/main/
-/chess_speech/
 /algorithms/
-/engine/
 /objects/

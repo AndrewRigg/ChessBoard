@@ -8,6 +8,8 @@ public class Piece {
 	String type = "";
 	int col;
 	int row;
+	int initRow;
+	int initCol;
 	boolean taken, isWhite, unmoved;
 
 	String notation = "";
@@ -25,6 +27,13 @@ public class Piece {
 			notation = type.substring(0,1);
 		}
 		unmoved = true;
+		//reflection of cols
+//		if(type.equals("Pawn")) {
+//			this.initCol = notation
+//		}
+//		this.initCol = 
+//		//2 or 7 if pawns, 1 or 8 otherwise 
+//		this.initRow = 
 	}
 	
 	public String getNotation() {

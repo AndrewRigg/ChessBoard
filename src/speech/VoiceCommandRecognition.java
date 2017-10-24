@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import main.ChessMate;
 import objects.Piece;
 import objects.Player;
 import objects.PlayerType;
@@ -45,7 +46,7 @@ public class VoiceCommandRecognition {
 	 */
 	public void createMoveFromText() throws IOException{
 		@SuppressWarnings("resource")
-		BufferedReader brTest = new BufferedReader(new FileReader("out.txt"));
+		BufferedReader brTest = new BufferedReader(new FileReader("src/files/out.txt"));
 		String text = brTest.readLine().toLowerCase();
 		String[] strArray = text.split(" ");
 		ArrayList<String> pieces = new ArrayList<String> (Arrays.asList(imageLocations));
@@ -128,11 +129,4 @@ public class VoiceCommandRecognition {
 		System.out.println("Piece: " + thisPiece.getName());
 		System.out.println("col: " + thisPiece.getCol() + " row: " + thisPiece.getRow());
 	}
-
-	public static void main (String [] args) throws IOException {
-		Player player = new Player("Player3", PlayerType.HUMAN, 0);
-		VoiceCommandRecognition vc = new VoiceCommandRecognition(player);
-		vc.createMoveFromText();
-	}
-	
 }
