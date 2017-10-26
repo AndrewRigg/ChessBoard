@@ -9,6 +9,8 @@ import speech.*;
 
 import com.sun.speech.freetts.*;
 
+import interfaces.GameSaveAndLoad;
+
 import java.io.*;
 import java.text.*;
 import java.util.*;
@@ -43,8 +45,8 @@ public class ChessMate extends Application {
 	Image backButton; 
 	ArrayList<ImageView> whiteImageViews, blackImageViews;
 	ArrayList<Piece> whitePieces, blackPieces;
-	ArrayList<Integer> rows;
-	ArrayList<Character> cols;
+//	ArrayList<Integer> rows;
+//	ArrayList<Character> cols;
 	ArrayList<ArrayList<Integer>> validMoves;
 	ArrayList<Menu> menuOptions;
 	ArrayList<MenuItem> menuItemOptions, playerOptions, clockOptions, settingsOptions;
@@ -62,8 +64,10 @@ public class ChessMate extends Application {
 	String [] imageLocations = {"Bishop", "King", "Knight", "Pawn", "Queen", "Rook"};	
 	String [] menus = {"File", "Competition", "Clock", "Tutorial"};
 	String [][] allMenuItems = {{"New", "Save", "Exit"}, {"Player1", "Player2"}, {"Competition", "Speed", "Custom"}, {"Rules", "Matches", "Moves"}};
-	private static final String VOICE = "kevin";
+//	private static final String VOICE = "kevin";
 	ValidMoves valid;
+	GameSaveAndLoad gameData;
+	CommandTextToSpeech tts;
 
 	/**
 	 * Constructor to initialise the chess board, players, clocks, menus
@@ -147,13 +151,13 @@ public class ChessMate extends Application {
 		blackImageViews = new ArrayList<>();
 		whitePieces = new ArrayList<>();
 		blackPieces = new ArrayList<>();
-		rows = new ArrayList<>();
-		cols = new ArrayList<>();
+//		rows = new ArrayList<>();
+//		cols = new ArrayList<>();
 		validMoves = new ArrayList<>();
-		for(int i = 1, a = 'a'; i <= 8; i ++, a++){
-			rows.add(i);
-			cols.add((char) a);
-		}
+//		for(int i = 1, a = 'a'; i <= 8; i ++, a++){
+//			rows.add(i);
+//			cols.add((char) a);
+//		}
 		root.setTop(menuBar);
 		menuItemOptions.get(3).setOnAction(actionEvent -> Platform.exit());
 
@@ -361,10 +365,13 @@ public class ChessMate extends Application {
 			            			movePiece(board, currentPiece, piece.getCol(), piece.getRow());
 			            			String str2 = " ";
 			            			String str = " ";
-			            			str = recordMove_algebraic_notation(current, current.getCol(), current.getRow(), piece.getCol(), piece.getRow(), true, false, false, false, false);
+			            			//str = recordMove_algebraic_notation(current, current.getCol(), current.getRow(), piece.getCol(), piece.getRow(), true, false, false, false, false);
+			            			str = gameData.recordMove_algebraic_notation(current, current.getCol(), current.getRow(), piece.getCol(), piece.getRow(), true, false, false, false, false);
 			            			if(textToSpeech) {
-				            			String command = getStringCommand(current, current.getCol(), current.getRow(), piece.getCol(), piece.getRow(), true, false);
-					            		speak(command);
+			            				String command = tts.getStringCommand(current, current.getCol(), current.getRow(), piece.getCol(), piece.getRow(), true, false);
+				            			//String command = getStringCommand(current, current.getCol(), current.getRow(), piece.getCol(), piece.getRow(), true, false);
+			            				tts.speak(command);
+					            		//speak(command);
 			            			}
 			            			if(current.isWhite() && firstMove){
 			            				str2 = lines++ + ": ";
@@ -392,144 +399,6 @@ public class ChessMate extends Application {
 	            }
 	        });
 			imageViews.add(imageView);
-		}
-	}
-	
-	
-	public void actionMove(String str, String str2, int col, int row) {
-		saveMovesToFile("" + str2 + str);
-		current.setCol(col);
-		current.setRow(row);
-		current.setUnmoved(false);	
-		firstMove = false;
-		piecePicked = false;
-		alreadySelected = false;
-		swapTurns();
-		showOccupied();	
-	}
-	
-	/**
-	 * Method for taking the audio stream of words from the text file and interpreting 
-	 * them into a command to move a chess piece
-	 * @throws IOException
-	 */
-	public void createMoveFromText() throws IOException{
-		@SuppressWarnings("resource")
-		BufferedReader brTest = new BufferedReader(new FileReader("files/commands.txt"));
-		String text = brTest.readLine().toLowerCase();
-		String[] strArray = text.split(" ");
-		ArrayList<String> pieces = new ArrayList<String> (Arrays.asList(imageLocations));
-		ArrayList<String> theseWords = new ArrayList<String> (Arrays.asList(strArray));
-		ArrayList<String> potentialWords = new ArrayList<>();
-		Piece thisPiece;
-		String type = "";
-		String longest = "";
-		int colTo = 0, rowTo = 0;
-		int index = 1;
-		boolean foundPiece = false;
-		
-		ListIterator<String> iterator = pieces.listIterator();
-	    while (iterator.hasNext())
-	    {
-	        iterator.set(iterator.next().toLowerCase());
-	    }
-		
-		System.out.println("Pieces: " + pieces.toString());
-		System.out.println("These words: " + theseWords.toString());
-		
-		// Stop. text is the first line.
-		System.out.println("Interpreted python text: ");
-		
-		for(String s: strArray) {
-			System.out.println(index++ + ": "+ s);
-			if(pieces.contains(s)) {
-				String st = s.substring(0,1).toUpperCase();
-				String end = s.substring(1,s.length());
-				s = st + end;
-				type = s;
-				foundPiece = true;
-				
-			}
-			else if(!foundPiece){
-				for(int i = 0; i < s.length(); i++) {
-					for(int j = i+1; j < s.length() - i; j++) {
-						String temp = s.substring(i, j);
-						if(pieces.contains(temp)) {
-							potentialWords.add(temp);
-						}
-					}
-				}
-				for(String str: potentialWords) {
-					if(str.length() > longest.length()) {
-						str = longest;
-					}
-				}
-			}
-		}
-
-		if (longest.length() > 2 && !foundPiece) {
-			for(String s: strArray) {
-				if(s.contains(longest)) {
-					type = s;
-				}
-			}
-		}
-		System.out.println("Type: " + type);
-		String nm = player1.playerTurn? "White " : "Black "; 
-		thisPiece = new Piece(nm + type);
-		thisPiece.setCol(colTo);
-		thisPiece.setRow(rowTo);
-		System.out.println("Piece: " + thisPiece.getName());
-	}
-	
-	
-	public void showOccupied(){
-		System.out.println("Occupied: ");
-		for(int i = 0; i < 8; i ++){
-			for(int j = 0; j < 8; j++){
-				if(occupied[i][j] == true){
-				System.out.print(1 + " ");
-				}else{
-					System.out.print(0 + " ");
-				}
-			}
-			System.out.print("\n");
-		}
-	}
-	
-	/**
-	 * Set the associated images of the chess pieces 
-	 * @param pieces
-	 * @param images
-	 */
-	public void assignImages(ArrayList<ImageView> imageViews, Image [] images, int [] indices) {
-		for(int j = 0; j < 8; j++) {
-			imageViews.get(j+8).setImage(images[3]);
-			imageViews.get(j).setImage(images[indices[j]]);
-		}
-	}
-	
-	/**
-	 * Set the chess piece objects to contain the coordinates, the image and the name of the piece
-	 * @param pieces
-	 * @param images
-	 * @param imageLocations
-	 * @param indices
-	 */
-	public void setUpPieces(ArrayList<Piece> pieces, ArrayList<ImageView> images, String [] imageLocations, int [] indices, boolean isWhite) {
-		for(int i = 0; i < NUMBER_OF_PIECES; i++) {
-			Piece piece;
-			String colour = (isWhite) ? "White " : "Black ";
-			if(i > 7){
-				piece = new Piece(colour + imageLocations[3] + " " + (i - 7), imageLocations[3], 0, 0, images.get(i), isWhite);
-			}else if(i < 3){
-				piece = new Piece(colour + imageLocations[indices[i]] + "1", imageLocations[indices[i]], 0, 0, images.get(i), isWhite);
-			}else if(i > 5){
-				piece = new Piece(colour + imageLocations[indices[i]] + "2", imageLocations[indices[i]], 0, 0, images.get(i), isWhite);
-			}else{
-				piece = new Piece(colour + imageLocations[indices[i]], imageLocations[indices[i]], 0, 0, images.get(i), isWhite);
-			}
-			pieces.add(piece);
 		}
 	}
 	
@@ -585,12 +454,12 @@ public class ChessMate extends Application {
 				            			}
 				            		}
 				            		if(textToSpeech) {
-					            		String command = getStringCommand(current, current.getCol(), current.getRow(), col, row, false, castling);
-					            		speak(command);
+					            		String command = tts.getStringCommand(current, current.getCol(), current.getRow(), col, row, false, castling);
+					            		tts.speak(command);
 				            		}
 				            		occupied[current.getRow()-2][current.getCol()-1] = false;
 			            			String str2 = " ";
-			            			String str = recordMove_algebraic_notation(current, current.getCol(), current.getRow(), col, row, false, false, false, false, castling);
+			            			String str = gameData.recordMove_algebraic_notation(current, current.getCol(), current.getRow(), col, row, false, false, false, false, castling);
 			            			if(current.isWhite() && firstMove){
 			            				str2 = lines++ + ": ";
 			            			}else if(current.isWhite()){
@@ -659,6 +528,68 @@ public class ChessMate extends Application {
 		}
 	}
 	
+	public void actionMove(String str, String str2, int col, int row) {
+		saveMovesToFile("" + str2 + str);
+		current.setCol(col);
+		current.setRow(row);
+		current.setUnmoved(false);	
+		firstMove = false;
+		piecePicked = false;
+		alreadySelected = false;
+		swapTurns();
+		showOccupied();	
+	}
+	
+	public void showOccupied(){
+		System.out.println("Occupied: ");
+		for(int i = 0; i < 8; i ++){
+			for(int j = 0; j < 8; j++){
+				if(occupied[i][j] == true){
+				System.out.print(1 + " ");
+				}else{
+					System.out.print(0 + " ");
+				}
+			}
+			System.out.print("\n");
+		}
+	}
+	
+	/**
+	 * Set the associated images of the chess pieces 
+	 * @param pieces
+	 * @param images
+	 */
+	public void assignImages(ArrayList<ImageView> imageViews, Image [] images, int [] indices) {
+		for(int j = 0; j < 8; j++) {
+			imageViews.get(j+8).setImage(images[3]);
+			imageViews.get(j).setImage(images[indices[j]]);
+		}
+	}
+	
+	/**
+	 * Set the chess piece objects to contain the coordinates, the image and the name of the piece
+	 * @param pieces
+	 * @param images
+	 * @param imageLocations
+	 * @param indices
+	 */
+	public void setUpPieces(ArrayList<Piece> pieces, ArrayList<ImageView> images, String [] imageLocations, int [] indices, boolean isWhite) {
+		for(int i = 0; i < NUMBER_OF_PIECES; i++) {
+			Piece piece;
+			String colour = (isWhite) ? "White " : "Black ";
+			if(i > 7){
+				piece = new Piece(colour + imageLocations[3] + " " + (i - 7), imageLocations[3], 0, 0, images.get(i), isWhite);
+			}else if(i < 3){
+				piece = new Piece(colour + imageLocations[indices[i]] + "1", imageLocations[indices[i]], 0, 0, images.get(i), isWhite);
+			}else if(i > 5){
+				piece = new Piece(colour + imageLocations[indices[i]] + "2", imageLocations[indices[i]], 0, 0, images.get(i), isWhite);
+			}else{
+				piece = new Piece(colour + imageLocations[indices[i]], imageLocations[indices[i]], 0, 0, images.get(i), isWhite);
+			}
+			pieces.add(piece);
+		}
+	}
+		
 	/**
 	 * Add the ImageViews of chess pieces to the board
 	 * @param board
@@ -684,9 +615,10 @@ public class ChessMate extends Application {
 		}
 	}
 	
-	
-	
-	
+	/**
+	 * Initialise the occupied grid to show the 
+	 * positions of pieces on the board
+	 */
 	public void setInitialOccupiedGrid(){
 		for(int j = 0; j < 8; j++){
 			occupied[0][j] = true;
@@ -704,13 +636,7 @@ public class ChessMate extends Application {
 	 * @param b
 	 */
 	public void createCheckerBoard(Rectangle rec, int a, int b) {
-		if( a > 0 && a < 9 && b > 0 && b < 9 && (a+b)%2 == 1) {
-			rec.setFill(Color.SLATEGRAY);
-		}else if(a > 0 && a < 9 && b > 0 && b < 9){
-			rec.setFill(Color.WHITE);
-		}else {
-			rec.setFill(Color.TRANSPARENT);
-		}
+		rec.setFill(valid.checkInBounds(a, b)? ((a+b)%2 == 1 ? Color.SLATEGRAY : Color.WHITE) : Color.TRANSPARENT);
 	}
 	
 	/**
@@ -725,11 +651,7 @@ public class ChessMate extends Application {
 			pane.getChildren().remove(pane.getChildren().size()-1);
 			Text text = new Text(player.getName() + ": " + clock.getTimeDisplay());
 			text.setFont(Font.font ("Verdana", 20));
-			if(player.playerTurn){
-				text.setFill(Color.RED);
-			}else {
-				text.setFill(Color.BLACK);
-			}
+			text.setFill(player.playerTurn? Color.RED : Color.BLACK);
 			pane.getChildren().add(text);
 		}
 	}
@@ -876,90 +798,90 @@ public class ChessMate extends Application {
 		return checkMate;
 	}
 	
-	/**
-	 * Set the string to be read out by the text-to-speech program
-	 * (this allows the CPU to let the player know what has been moved)
-	 * @param piece
-	 * @param colFrom
-	 * @param rowFrom
-	 * @param colTo
-	 * @param rowTo
-	 * @return
-	 */
-	public String getStringCommand(Piece piece,  int colFrom, int rowFrom,  int colTo, int rowTo, boolean capture, boolean castling){
-		String command = "";
-		if(castling) {
-			if(colTo < 5) {
-				command = "Queenside Castle";
-			}else {
-				command = "Kingside Castle";
-			}
-		}else {
-			command = piece.getType() + " from " + cols.get(colFrom-1) + rows.get(9-rowFrom) + " to " +  cols.get(colTo-1) + rows.get(9-rowTo);
-		}
-		if (capture) {
-			command += "Capture";
-		}
-		return command;
-	}
+//	/**
+//	 * Set the string to be read out by the text-to-speech program
+//	 * (this allows the CPU to let the player know what has been moved)
+//	 * @param piece
+//	 * @param colFrom
+//	 * @param rowFrom
+//	 * @param colTo
+//	 * @param rowTo
+//	 * @return
+//	 */
+//	public String getStringCommand(Piece piece,  int colFrom, int rowFrom,  int colTo, int rowTo, boolean capture, boolean castling){
+//		String command = "";
+//		if(castling) {
+//			if(colTo < 5) {
+//				command = "Queenside Castle";
+//			}else {
+//				command = "Kingside Castle";
+//			}
+//		}else {
+//			command = piece.getType() + " from " + cols.get(colFrom-1) + rows.get(9-rowFrom) + " to " +  cols.get(colTo-1) + rows.get(9-rowTo);
+//		}
+//		if (capture) {
+//			command += "Capture";
+//		}
+//		return command;
+//	}
+//	
+//	/**
+//	 * FreeTTS text-to-speech facility for reading out moves for CPU (and player).
+//	 * 
+//	 */
+//	 public void speak(String text) {
+//		  Voice voice;
+//		  VoiceManager voiceManager = VoiceManager.getInstance();
+//		  voice = voiceManager.getVoice(VOICE);
+//		  voice.allocate();
+//		  voice.speak(text);
+//		 }
 	
-	/**
-	 * FreeTTS text-to-speech facility for reading out moves for CPU (and player).
-	 * 
-	 */
-	 public void speak(String text) {
-		  Voice voice;
-		  VoiceManager voiceManager = VoiceManager.getInstance();
-		  voice = voiceManager.getVoice(VOICE);
-		  voice.allocate();
-		  voice.speak(text);
-		 }
-	
-	 /**
-	  * Return a string with the algebraic notation of the chess move which can be 
-	  * used to save, load or record a game
-	  * @param args
-	  */
-	 public String recordMove_algebraic_notation(Piece piece, int colFrom, int rowFrom, int colTo, int rowTo, 
-			 boolean capture, boolean ambiguousCol, boolean ambiguousRow, boolean ambiguousBoth, boolean castling){
-		 String move = "";
-		 //Could create method to determine if it will be ambiguous or not, this would 
-		 //require knowing all the potential squares which identical pieces can move to
-		 if(ambiguousRow){
-			 move += cols.get(colFrom-1);
-		 }else if(ambiguousCol){
-			 move += rows.get(9-rowFrom);
-		 }else if(ambiguousBoth){
-			 move += cols.get(colFrom-1) + rows.get(9-rowFrom);
-		 }
-		 move += piece.getNotation();
-		 if(capture){
-			 //If pawn is capturing then we need a way of making the piece unambiguous
-			 //Here, two identical pieces could move to this square from the same row so
-			 //we need to prefix the move with the column of departure of the piece
-			 if(piece.getType().equals("Pawn") || ambiguousRow){
-				 move += cols.get(colFrom-1);
-			 }else if(ambiguousCol){
-			 //Here, two identical pieces could move to this square from the same column so
-			 //we need to prefix the move with the row of departure of the piece
-				 move += rows.get(9-rowFrom);
-			 }else if(ambiguousBoth){
-			 //This case only occurs very rarely when at least one pawn has been promoted and so 
-			 //three or more identical pieces could move to the same square, thus both the row and 
-			 //column of departure must be prefixed
-				 move += cols.get(colFrom-1) + rows.get(9-rowFrom);
-			 }
-			 move += "x";
-		 }
-		 move += "" + cols.get((colTo-1)) + rows.get(9-rowTo);
-		 if(castling) {
-			 move = "0-0";
-			 if(colTo == 3) {
-				 move += "-0";
-			 }
-		 }
-		 return move;
-	 }
+//	 /**
+//	  * Return a string with the algebraic notation of the chess move which can be 
+//	  * used to save, load or record a game
+//	  * @param args
+//	  */
+//	 public String recordMove_algebraic_notation(Piece piece, int colFrom, int rowFrom, int colTo, int rowTo, 
+//			 boolean capture, boolean ambiguousCol, boolean ambiguousRow, boolean ambiguousBoth, boolean castling){
+//		 String move = "";
+//		 //Could create method to determine if it will be ambiguous or not, this would 
+//		 //require knowing all the potential squares which identical pieces can move to
+//		 if(ambiguousRow){
+//			 move += cols.get(colFrom-1);
+//		 }else if(ambiguousCol){
+//			 move += rows.get(9-rowFrom);
+//		 }else if(ambiguousBoth){
+//			 move += cols.get(colFrom-1) + rows.get(9-rowFrom);
+//		 }
+//		 move += piece.getNotation();
+//		 if(capture){
+//			 //If pawn is capturing then we need a way of making the piece unambiguous
+//			 //Here, two identical pieces could move to this square from the same row so
+//			 //we need to prefix the move with the column of departure of the piece
+//			 if(piece.getType().equals("Pawn") || ambiguousRow){
+//				 move += cols.get(colFrom-1);
+//			 }else if(ambiguousCol){
+//			 //Here, two identical pieces could move to this square from the same column so
+//			 //we need to prefix the move with the row of departure of the piece
+//				 move += rows.get(9-rowFrom);
+//			 }else if(ambiguousBoth){
+//			 //This case only occurs very rarely when at least one pawn has been promoted and so 
+//			 //three or more identical pieces could move to the same square, thus both the row and 
+//			 //column of departure must be prefixed
+//				 move += cols.get(colFrom-1) + rows.get(9-rowFrom);
+//			 }
+//			 move += "x";
+//		 }
+//		 move += "" + cols.get((colTo-1)) + rows.get(9-rowTo);
+//		 if(castling) {
+//			 move = "0-0";
+//			 if(colTo == 3) {
+//				 move += "-0";
+//			 }
+//		 }
+//		 return move;
+//	 }
 	 
 	 
 	 public int determineSaveFile() {
