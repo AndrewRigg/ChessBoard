@@ -24,6 +24,7 @@ import javafx.scene.text.*;
 import javafx.stage.*;
 import objects.Clock;
 import objects.ClockMode;
+import objects.Moves;
 import objects.Piece;
 import objects.Player;
 import objects.PlayerType;
@@ -48,6 +49,7 @@ public class ChessMate extends Application {
 	ArrayList<Character> cols;
 	ArrayList<ArrayList<Integer>> validMoves;
 	ArrayList<Menu> menuOptions;
+	ArrayList<Moves> moves;
 	ArrayList<MenuItem> menuItemOptions, playerOptions, clockOptions, settingsOptions;
 	ArrayList<ArrayList<MenuItem>> allItems;
 	ImageView currentPiece;
@@ -56,7 +58,7 @@ public class ChessMate extends Application {
 	Button voiceCommand, back, enableTextToSpeech;
 	VoiceCommandRecognition voiceCommandRec;
 	boolean piecePicked, whiteTurn, alreadySelected, flag, firstMove, castling, check, checkMate, textToSpeech;
-	final int IMAGE_TYPES = 6, SQUARE_SIZE = 65, NUMBER_OF_PIECES = 16;
+	final int IMAGE_TYPES = 6, SQUARE_SIZE = 50, NUMBER_OF_PIECES = 16;
 	int [] indices = {5, 2, 0, 4, 1, 0, 2, 5}, takenWhiteCounts = {0,0,0,0,0}, takenBlackCounts = {0,0,0,0,0};
 	int lines;
 	boolean [][] occupied = new boolean[8][8];
@@ -144,7 +146,7 @@ public class ChessMate extends Application {
 		allItems.add(settingsOptions);
 		allItems.add(playerOptions);
 		
-		backButton = new Image("res/undo.png");
+		backButton = new Image("undo.png");
 		
 		whiteImages = new Image [IMAGE_TYPES];
 		blackImages = new Image [IMAGE_TYPES];
@@ -168,8 +170,8 @@ public class ChessMate extends Application {
 		ImageView backImage = new ImageView(backButton);
 		backImage.setFitHeight(30);
 		backImage.setFitWidth(30);
-		Image audioMute = new Image("res/mute.png");
-		Image audio = new Image("res/audio.png");
+		Image audioMute = new Image("mute.png");
+		Image audio = new Image("audio.png");
 		ImageView audioMuteImage = new ImageView(audioMute);
 		ImageView audioImage = new ImageView(audio);
 		audioMuteImage.setFitHeight(30);
@@ -197,20 +199,20 @@ public class ChessMate extends Application {
 		    @Override public void handle(ActionEvent e) {
 		    	String s = "";
 		    	long timeStart = System.currentTimeMillis();
-//		    	try {
-//					Process p = Runtime.getRuntime().exec("python C:\\Users\\Andrew\\Documents\\GitHub\\ChessBoard\\src\\myapp\\py_speech_stream.py");
+		    	try {
+//					Process p = Runtime.getRuntime().exec("python C:\\Users\\Andrew\\Documents\\GitHub\\ChessBoard\\src\\speech \\py_speech_stream.py");
 //					BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
 //					System.out.println("here is python output: ");
 //					while((s = stdInput.readLine()) != null && (System.currentTimeMillis()-timeStart) < 10000) {
 //						System.out.println(s);
 //					}
-//					 //createMoveFromText();
-//					 //System.exit(0);
-//				} catch (IOException e1) {
+					 createMoveFromText();
+					 //System.exit(0);
+				} catch (IOException e1) {
 //					// TODO Auto-generated catch block
 //					System.err.print("Could not run python code!");
 //					e1.printStackTrace();
-//				}
+				}
 		    	
 		    	
 		    }
@@ -231,6 +233,8 @@ public class ChessMate extends Application {
 	    menuBar.prefWidthProperty().bind(primaryStage.widthProperty());
 	   
 	    setInitialOccupiedGrid();
+	    
+	    moves  = new ArrayList<>();
 	    
 	    setUpBoard();
 	    
@@ -278,13 +282,12 @@ public class ChessMate extends Application {
 		primaryStage.show(); 
 		
 		//Testing out functionality of interpreted textfile
-		try {
-			voiceCommandRec = new VoiceCommandRecognition(player1.playerTurn? player1: player2);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
+//		try {
+//			voiceCommandRec = new VoiceCommandRecognition(player1.playerTurn? player1: player2);
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 	}
 	
 	/**
@@ -294,7 +297,7 @@ public class ChessMate extends Application {
 	 */
 	public void setUpImages(Image [] images, boolean isWhite){
 		for (int i = 0; i < IMAGE_TYPES; i++) {
-			images[i] = new Image("res/" + ((isWhite) ? "white" : "black") + imageLocations[i] + ".png");
+			images[i] = new Image(((isWhite) ? "white" : "black") + imageLocations[i] + ".png");
 		}
 	}
 	
@@ -382,6 +385,9 @@ public class ChessMate extends Application {
 			            			alreadySelected = false;
 			            			swapTurns();
 			            			showOccupied();	
+			            			int []thisPiece = {piece.getCol(), piece.getRow()};
+				            		Moves thisMove = new Moves(piece, thisPiece);
+				            		moves.add(thisMove);
 		            			}
 		            			if(!validMoves.isEmpty()) {
 		            				removeHighlights(validMoves);
@@ -397,132 +403,7 @@ public class ChessMate extends Application {
 			imageViews.add(imageView);
 		}
 	}
-	
-	/**
-	 * Method for taking the audio stream of words from the text file and interpreting 
-	 * them into a command to move a chess piece
-	 * @throws IOException
-	 */
-	public void createMoveFromText() throws IOException{
-		@SuppressWarnings("resource")
-		BufferedReader brTest = new BufferedReader(new FileReader("out.txt"));
-		String text = brTest.readLine().toLowerCase();
-		String[] strArray = text.split(" ");
-		ArrayList<String> pieces = new ArrayList<String> (Arrays.asList(imageLocations));
-		ArrayList<String> theseWords = new ArrayList<String> (Arrays.asList(strArray));
-		ArrayList<String> potentialWords = new ArrayList<>();
-		Piece thisPiece;
-		String type = "";
-		String longest = "";
-		int colTo = 0, rowTo = 0;
-		int index = 1;
-		boolean foundPiece = false;
-		
-		ListIterator<String> iterator = pieces.listIterator();
-	    while (iterator.hasNext())
-	    {
-	        iterator.set(iterator.next().toLowerCase());
-	    }
-		
-		System.out.println("Pieces: " + pieces.toString());
-		System.out.println("These words: " + theseWords.toString());
-		
-		// Stop. text is the first line.
-		System.out.println("Interpreted python text: ");
-		
-		for(String s: strArray) {
-			System.out.println(index++ + ": "+ s);
-			if(pieces.contains(s)) {
-				String st = s.substring(0,1).toUpperCase();
-				String end = s.substring(1,s.length());
-				s = st + end;
-				type = s;
-				foundPiece = true;
-				
-			}
-			else if(!foundPiece){
-				for(int i = 0; i < s.length(); i++) {
-					for(int j = i+1; j < s.length() - i; j++) {
-						String temp = s.substring(i, j);
-						if(pieces.contains(temp)) {
-							potentialWords.add(temp);
-						}
-					}
-				}
-				for(String str: potentialWords) {
-					if(str.length() > longest.length()) {
-						str = longest;
-					}
-				}
-			}
-		}
 
-		if (longest.length() > 2 && !foundPiece) {
-			for(String s: strArray) {
-				if(s.contains(longest)) {
-					type = s;
-				}
-			}
-		}
-		System.out.println("Type: " + type);
-		String nm = player1.playerTurn? "White " : "Black "; 
-		thisPiece = new Piece(nm + type);
-		thisPiece.setCol(colTo);
-		thisPiece.setRow(rowTo);
-		System.out.println("Piece: " + thisPiece.getName());
-	}
-	
-	
-	public void showOccupied(){
-		System.out.println("Occupied: ");
-		for(int i = 0; i < 8; i ++){
-			for(int j = 0; j < 8; j++){
-				if(occupied[i][j] == true){
-				System.out.print(1 + " ");
-				}else{
-					System.out.print(0 + " ");
-				}
-			}
-			System.out.print("\n");
-		}
-	}
-	
-	/**
-	 * Set the associated images of the chess pieces 
-	 * @param pieces
-	 * @param images
-	 */
-	public void assignImages(ArrayList<ImageView> imageViews, Image [] images, int [] indices) {
-		for(int j = 0; j < 8; j++) {
-			imageViews.get(j+8).setImage(images[3]);
-			imageViews.get(j).setImage(images[indices[j]]);
-		}
-	}
-	
-	/**
-	 * Set the chess piece objects to contain the coordinates, the image and the name of the piece
-	 * @param pieces
-	 * @param images
-	 * @param imageLocations
-	 * @param indices
-	 */
-	public void setUpPieces(ArrayList<Piece> pieces, ArrayList<ImageView> images, String [] imageLocations, int [] indices, boolean isWhite) {
-		for(int i = 0; i < NUMBER_OF_PIECES; i++) {
-			Piece piece;
-			String colour = (isWhite) ? "White " : "Black ";
-			if(i > 7){
-				piece = new Piece(colour + imageLocations[3] + " " + (i - 7), imageLocations[3], 0, 0, images.get(i), isWhite);
-			}else if(i < 3){
-				piece = new Piece(colour + imageLocations[indices[i]] + "1", imageLocations[indices[i]], 0, 0, images.get(i), isWhite);
-			}else if(i > 5){
-				piece = new Piece(colour + imageLocations[indices[i]] + "2", imageLocations[indices[i]], 0, 0, images.get(i), isWhite);
-			}else{
-				piece = new Piece(colour + imageLocations[indices[i]], imageLocations[indices[i]], 0, 0, images.get(i), isWhite);
-			}
-			pieces.add(piece);
-		}
-	}
-	
 	/**
 	 * Set up the board to have an 8x8 grid with a border 1 square thick,
 	 * stack panes and clock timers
@@ -595,6 +476,9 @@ public class ChessMate extends Application {
 				            		alreadySelected = false;
 				            		showOccupied();	
 				            		swapTurns();
+				            		int []thisPiece = {col, row};
+				            		Moves thisMove = new Moves(current, thisPiece);
+				            		moves.add(thisMove);
 			            		}
 			            		if(!validMoves.isEmpty()) {
 			            			removeHighlights(validMoves);
@@ -618,7 +502,7 @@ public class ChessMate extends Application {
 		                    updateClockOnBoard(pane, player1, clock1);  
 		                  }
 		                });   
-				}
+					}
 				
 				//Add clock2 to top right of board
 				if(a == 9 && b == 0) {
@@ -653,6 +537,260 @@ public class ChessMate extends Application {
 			}
 		}
 	}
+	
+	/**
+	 * Method for taking the audio stream of words from the text file and interpreting 
+	 * them into a command to move a chess piece
+	 * @throws IOException
+	 */
+//	public void createMoveFromText() throws IOException{
+//		@SuppressWarnings("resource")
+//		BufferedReader brTest = new BufferedReader(new FileReader("out.txt"));
+//		String text = brTest.readLine().toLowerCase();
+//		String[] strArray = text.split(" ");
+//		ArrayList<String> pieces = new ArrayList<String> (Arrays.asList(imageLocations));
+//		ArrayList<String> theseWords = new ArrayList<String> (Arrays.asList(strArray));
+//		ArrayList<String> potentialWords = new ArrayList<>();
+//		Piece thisPiece;
+//		String type = "";
+//		String longest = "";
+//		int colTo = 0, rowTo = 0;
+//		int index = 1;
+//		boolean foundPiece = false;
+//		
+//		ListIterator<String> iterator = pieces.listIterator();
+//	    while (iterator.hasNext())
+//	    {
+//	        iterator.set(iterator.next().toLowerCase());
+//	    }
+//		
+//		System.out.println("Pieces: " + pieces.toString());
+//		System.out.println("These words: " + theseWords.toString());
+//		
+//		// Stop. text is the first line.
+//		System.out.println("Interpreted python text: ");
+//		
+//		for(String s: strArray) {
+//			System.out.println(index++ + ": "+ s);
+//			if(pieces.contains(s)) {
+//				String st = s.substring(0,1).toUpperCase();
+//				String end = s.substring(1,s.length());
+//				s = st + end;
+//				type = s;
+//				foundPiece = true;
+//				
+//			}
+//			else if(!foundPiece){
+//				for(int i = 0; i < s.length(); i++) {
+//					for(int j = i+1; j < s.length() - i; j++) {
+//						String temp = s.substring(i, j);
+//						if(pieces.contains(temp)) {
+//							potentialWords.add(temp);
+//						}
+//					}
+//				}
+//				for(String str: potentialWords) {
+//					if(str.length() > longest.length()) {
+//						str = longest;
+//					}
+//				}
+//			}
+//		}
+//
+//		if (longest.length() > 2 && !foundPiece) {
+//			for(String s: strArray) {
+//				if(s.contains(longest)) {
+//					type = s;
+//				}
+//			}
+//		}
+//		System.out.println("Type: " + type);
+//		String nm = player1.playerTurn? "White " : "Black "; 
+//		thisPiece = new Piece(nm + type);
+//		thisPiece.setCol(colTo);
+//		thisPiece.setRow(rowTo);
+//		System.out.println("Piece: " + thisPiece.getName());
+		
+		
+		
+		/**
+		 * Takes the text from out.txt and creates an appropriate move based on which
+		 * player's turn it is
+		 * @throws IOException
+		 */
+		public void createMoveFromText() throws IOException{
+			@SuppressWarnings("resource")
+			BufferedReader brTest = new BufferedReader(new FileReader("out.txt"));
+			String text = brTest.readLine().toLowerCase();
+			String[] strArray = text.split(" ");
+			ArrayList<String> pieces = new ArrayList<String> (Arrays.asList(imageLocations));
+			ArrayList<String> theseWords = new ArrayList<String> (Arrays.asList(strArray));
+			ArrayList<String> potentialWords = new ArrayList<>();
+			Piece thisPiece;
+			String type = ""; 
+			String longest = "";
+			String squareTo = "";
+			int colTo = 0, rowTo = 0;
+			int index = 1;
+			boolean foundPiece = false;
+			
+			ListIterator<String> iterator = pieces.listIterator();
+		    while (iterator.hasNext())
+		    {
+		        iterator.set(iterator.next().toLowerCase());
+		    }
+			
+			System.out.println("Pieces: " + pieces.toString());
+			System.out.println("These words: " + theseWords.toString());
+			
+			// Stop. text is the first line.
+			System.out.println("Interpreted python text: ");
+			
+			for(String s: strArray) {
+				potentialWords.clear();
+				System.out.println(index++ + ": "+ s);
+				if(pieces.contains(s)) {
+					String st = s.substring(0,1).toUpperCase();
+					String end = s.substring(1,s.length());
+					s = st + end;
+					type = s;
+					foundPiece = true;
+					
+				}
+				else if(!foundPiece){
+					for(int i = 0; i < s.length(); i++) {
+						for(int j = i+1; j < s.length() - i + 1; j++) {
+							String temp = s.substring(i, j);
+							System.out.println("\t --> " + temp);
+							for(String piece: pieces) {
+								if(piece.contains(temp)) {
+									System.out.println("Adding temp: " + temp);
+									potentialWords.add(temp);
+								}
+							}
+						}
+					}
+					System.out.println("Pt: " + potentialWords.toString());
+					for(String str: potentialWords) {
+						if(str.length() > longest.length()) {
+							longest = str;
+						}
+					}
+				}
+			
+				for(int i = 0; i < rows.size(); i++) {
+					if(s.contains(rows.get(i).toString())) {
+						squareTo = s;
+						System.out.println("squareTo: " + squareTo);
+						rowTo = i+1;
+					}
+				}
+			}
+			
+			for(int j = 0; j < cols.size(); j++) {
+				if(squareTo.contains(cols.get(j).toString())) {
+					System.out.println(" cols j: " + cols.get(j));
+					colTo = j+1;
+				}
+			}
+
+			if (!foundPiece) {
+				for(String s: pieces) {
+					if(s.contains(longest)) {
+						String st = s.substring(0,1).toUpperCase();
+						String end = s.substring(1,s.length());
+						s = st + end;
+						type = s;
+					}
+				}
+			}
+			
+			String nm = player1.playerTurn? "White " : "Black "; 
+			thisPiece = new Piece(nm + type);
+			thisPiece.setCol(colTo);
+			thisPiece.setRow(rowTo);
+			System.out.println("Piece: " + thisPiece.getName());
+			System.out.println("col: " + thisPiece.getCol() + " row: " + thisPiece.getRow());
+		
+			
+			//Need to first get actual pieces from board
+//			ImageView thisImage;
+//			ObservableList<Node> children = board.getChildren();
+//			for(Node node: children){
+//				if(GridPane.getRowIndex(node) == rowTo && GridPane.getColumnIndex(node) == colTo){
+//					//find whether we are this image and get imageview
+//				}
+//			}
+			
+		ArrayList<Integer> temp = new ArrayList<>();
+		temp.add(colTo);
+		temp.add(rowTo);
+		
+		
+		for(Piece piece: player1.playerTurn? whitePieces : blackPieces) {
+			validMoves.clear();
+			if(piece.getType().equals(type)) {
+				if((getValidMoves(piece)).contains(temp)) {
+					movePiece(board, (player1.playerTurn? whiteImageViews : blackImageViews).get((player1.playerTurn? whitePieces : blackPieces).indexOf(piece)), colTo,10 - rowTo);
+					swapTurns();
+				}
+			}
+		}
+	}
+	
+	/**
+	 * 
+	 */
+	public void showOccupied(){
+		System.out.println("Occupied: ");
+		for(int i = 0; i < 8; i ++){
+			for(int j = 0; j < 8; j++){
+				if(occupied[i][j] == true){
+				System.out.print(1 + " ");
+				}else{
+					System.out.print(0 + " ");
+				}
+			}
+			System.out.print("\n");
+		}
+	}
+	
+	/**
+	 * Set the associated images of the chess pieces 
+	 * @param pieces
+	 * @param images
+	 */
+	public void assignImages(ArrayList<ImageView> imageViews, Image [] images, int [] indices) {
+		for(int j = 0; j < 8; j++) {
+			imageViews.get(j+8).setImage(images[3]);
+			imageViews.get(j).setImage(images[indices[j]]);
+		}
+	}
+	
+	/**
+	 * Set the chess piece objects to contain the coordinates, the image and the name of the piece
+	 * @param pieces
+	 * @param images
+	 * @param imageLocations
+	 * @param indices
+	 */
+	public void setUpPieces(ArrayList<Piece> pieces, ArrayList<ImageView> images, String [] imageLocations, int [] indices, boolean isWhite) {
+		for(int i = 0; i < NUMBER_OF_PIECES; i++) {
+			Piece piece;
+			String colour = (isWhite) ? "White " : "Black ";
+			if(i > 7){
+				piece = new Piece(colour + imageLocations[3] + " " + (i - 7), imageLocations[3], 0, 0, images.get(i), isWhite);
+			}else if(i < 3){
+				piece = new Piece(colour + imageLocations[indices[i]] + "1", imageLocations[indices[i]], 0, 0, images.get(i), isWhite);
+			}else if(i > 5){
+				piece = new Piece(colour + imageLocations[indices[i]] + "2", imageLocations[indices[i]], 0, 0, images.get(i), isWhite);
+			}else{
+				piece = new Piece(colour + imageLocations[indices[i]], imageLocations[indices[i]], 0, 0, images.get(i), isWhite);
+			}
+			pieces.add(piece);
+		}
+	}
+	
 	
 	/**
 	 * Add the ImageViews of chess pieces to the board

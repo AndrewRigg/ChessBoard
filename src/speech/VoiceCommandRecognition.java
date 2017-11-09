@@ -127,6 +127,7 @@ public class VoiceCommandRecognition {
 		thisPiece.setRow(rowTo);
 		System.out.println("Piece: " + thisPiece.getName());
 		System.out.println("col: " + thisPiece.getCol() + " row: " + thisPiece.getRow());
+		
 	}
 
 	public static void main (String [] args) throws IOException {

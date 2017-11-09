@@ -19,7 +19,7 @@ public class UpdateClock extends TimerTask{
 		clock.time--;
 		clock.minutes = (int) (clock.time / 60);
 		clock.seconds = (int) (clock.time % 60);
-		//System.out.println("" + clock.minutes + ":" + String.format("%02d", clock.seconds));
+		System.out.println("" + clock.minutes + ":" + String.format("%02d", clock.seconds));
 		clock.timeDisplay = "" + clock.minutes + ":" + String.format("%02d", clock.seconds);
 	}	
 }
