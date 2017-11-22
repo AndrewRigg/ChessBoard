@@ -57,10 +57,10 @@ public class ChessMate extends Application {
 	GridPane board;
 	Button voiceCommand, back, enableTextToSpeech;
 	VoiceCommandRecognition voiceCommandRec;
-	boolean piecePicked, whiteTurn, alreadySelected, flag, firstMove, castling, check, checkMate, textToSpeech;
+	boolean piecePicked, whiteTurn, alreadySelected, flag, firstMove, castling, check, checkMate, textToSpeech, enPassant = false, enPassantOn = false;
 	final int IMAGE_TYPES = 6, SQUARE_SIZE = 50, NUMBER_OF_PIECES = 16;
 	int [] indices = {5, 2, 0, 4, 1, 0, 2, 5}, takenWhiteCounts = {0,0,0,0,0}, takenBlackCounts = {0,0,0,0,0};
-	int lines;
+	int lines, enPassantRow = 0, enPassantCol = 0;
 	boolean [][] occupied = new boolean[8][8];
 	String [] imageLocations = {"Bishop", "King", "Knight", "Pawn", "Queen", "Rook"};	
 	String [] menus = {"File", "Competition", "Clock", "Tutorial"};
@@ -200,13 +200,13 @@ public class ChessMate extends Application {
 		    	String s = "";
 		    	long timeStart = System.currentTimeMillis();
 		    	try {
-//					Process p = Runtime.getRuntime().exec("python C:\\Users\\Andrew\\Documents\\GitHub\\ChessBoard\\src\\speech \\py_speech_stream.py");
+					Process p = Runtime.getRuntime().exec("python C:\\Users\\Andrew\\Documents\\GitHub\\ChessBoard\\src\\speech \\py_speech_stream.py");
 //					BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
 //					System.out.println("here is python output: ");
 //					while((s = stdInput.readLine()) != null && (System.currentTimeMillis()-timeStart) < 10000) {
 //						System.out.println(s);
 //					}
-					 createMoveFromText();
+					// createMoveFromText();
 					 //System.exit(0);
 				} catch (IOException e1) {
 //					// TODO Auto-generated catch block
@@ -393,7 +393,7 @@ public class ChessMate extends Application {
 		            				removeHighlights(validMoves);
 		            				validMoves.clear();
 		            			}
-		            			System.out.println("Check: "+ detectCheck(pieces.get(5), pieces, otherPieces));
+		            			//System.out.println("Check: "+ detectCheck(pieces.get(5), pieces, otherPieces));
 		            		}
 		            		
 		            	}
@@ -434,6 +434,30 @@ public class ChessMate extends Application {
 		            			temp.add(col);
 		            			temp.add(10 - row);
 			            		if(validMoves.contains(temp)) {
+			            			if(current.getType().equals("Pawn") &&  Math.abs(current.getRow() - row) == 2){
+			            				current.setEnPassant(true);
+			            				enPassant = true;
+			            				enPassantRow = current.getRow();
+			            				enPassantCol = current.getCol();
+			            				System.out.println("Set en passant");
+			            			}else {
+			            				enPassant = false;
+			            				current.setEnPassant(false);
+			            				System.out.println("En passant unset");
+			            			}
+			            			System.out.println("enPassantOn: " + enPassantOn + " type " + current.getType().equals("Pawn") + " col: " + col + " current col: " + current.getCol());
+			            			if(enPassantOn && current.getType().equals("Pawn") && current.getCol() != col) {
+			            				System.out.println("Git here asdf");
+			            				for(Piece piece: otherPieces) {
+			            					System.out.println("piece.getRow " + piece.getRow());
+			            					if(piece.getRow() == (piece.isWhite()? 6: 5) && piece.getCol() == col) {
+			            						int [] tempPos = removePiece(piece);
+			            						piece.setTaken(true);
+			            						piece.setCol(tempPos[0]);
+						            			piece.setRow(tempPos[1]);
+			            					}
+			            				}
+			            			}
 			            			occupied[row-2][col-1] = true;
 				            		movePiece(board, currentPiece, col, row);
 				            		if(current.getType().equals("King") && Math.abs(current.getCol() - col) == 2) {
@@ -484,7 +508,7 @@ public class ChessMate extends Application {
 			            			removeHighlights(validMoves);
 			            			validMoves.clear();
 			            		}
-			            		System.out.println("Check: "+ detectCheck(otherPieces.get(5), otherPieces, thesePieces));
+			            		//System.out.println("Check: "+ detectCheck(otherPieces.get(5), otherPieces, thesePieces));
 				            }
 				        }
 			        });
@@ -733,6 +757,7 @@ public class ChessMate extends Application {
 				if((getValidMoves(piece)).contains(temp)) {
 					movePiece(board, (player1.playerTurn? whiteImageViews : blackImageViews).get((player1.playerTurn? whitePieces : blackPieces).indexOf(piece)), colTo,10 - rowTo);
 					swapTurns();
+					System.out.println("Got here bud");
 				}
 			}
 		}
@@ -742,16 +767,16 @@ public class ChessMate extends Application {
 	 * 
 	 */
 	public void showOccupied(){
-		System.out.println("Occupied: ");
+		//System.out.println("Occupied: ");
 		for(int i = 0; i < 8; i ++){
 			for(int j = 0; j < 8; j++){
 				if(occupied[i][j] == true){
-				System.out.print(1 + " ");
+				//System.out.print(1 + " ");
 				}else{
-					System.out.print(0 + " ");
+				//	System.out.print(0 + " ");
 				}
 			}
-			System.out.print("\n");
+			//System.out.print("\n");
 		}
 	}
 	
@@ -967,7 +992,7 @@ public class ChessMate extends Application {
 		ArrayList<Integer> kingCoordinates = new ArrayList<>();
 		kingCoordinates.add(king.getCol()-1);
 		kingCoordinates.add(10 - king.getRow());
-		System.out.println("king coords: " + (king.getCol()-1) + " " + (10 - king.getRow()));
+		//System.out.println("king coords: " + (king.getCol()-1) + " " + (10 - king.getRow()));
 		check = false;
 		for(Piece opposite: oppositePieces) {
 			validMoves = getValidMoves(opposite);
@@ -975,7 +1000,7 @@ public class ChessMate extends Application {
 			if(validMoves.contains(kingCoordinates)){
 				check = true;
 			}
-			System.out.println("valid move coords for " + opposite.getType() + ": " + validMoves.toString());
+			//System.out.println("valid move coords for " + opposite.getType() + ": " + validMoves.toString());
 			validMoves.clear();
 		}
 //		if(check) {
@@ -1142,6 +1167,20 @@ public class ChessMate extends Application {
 		 		}else {
 		 			ArrayList<Integer> thisPawnMove = new ArrayList<>();
 			 		if(piece.isWhite()){
+			 			
+			 			//White en passant
+			 			
+			 			if(piece.getRow() == 5) {
+			 				//if black pawn adjacent and just moved 2
+			 				if(enPassant && Math.abs(enPassantCol - piece.getCol()) == 1){
+			 					ArrayList<Integer> enPassantMove =  new ArrayList<>();
+			 					enPassantMove.add(enPassantCol);
+			 					enPassantMove.add(6);
+			 					validMoves.add(enPassantMove);
+			 					enPassantOn = true;
+			 				}
+			 			}
+			 			
 				 			potentialCol = col;
 					 		potentialRow = row++;
 					 		if(checkInBounds(potentialCol, potentialRow)){
@@ -1149,6 +1188,19 @@ public class ChessMate extends Application {
 					 			thisPawnMove.add(row);
 				 		}
 			 		}else{
+			 			System.out.println("piece " + piece.getRow());
+			 			//Black en passant
+			 			if(piece.getRow() == 6) {
+				 			//if white pawn adjacent and just moved 2
+			 				if(enPassant && Math.abs(enPassantCol - piece.getCol()) == 1){
+			 					ArrayList<Integer> enPassantMove2 =  new ArrayList<>();
+			 					enPassantMove2.add(enPassantCol);
+			 					enPassantMove2.add(3);
+			 					validMoves.add(enPassantMove2);
+			 					enPassantOn = true;
+			 				}
+				 		}
+			 			
 			 			thisPawnMove.clear();
 			 			potentialCol = col;
 				 		potentialRow = row--;
@@ -1156,7 +1208,7 @@ public class ChessMate extends Application {
 				 			thisPawnMove.add(col); 
 				 			thisPawnMove.add(row);
 				 		}
-			 		}
+			 		}			 	
 			 		validMoves.add(thisPawnMove);
 		 		}
 		 		

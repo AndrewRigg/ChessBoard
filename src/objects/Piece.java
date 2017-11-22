@@ -8,7 +8,7 @@ public class Piece {
 	String type = "";
 	int col;
 	int row;
-	boolean taken, isWhite, unmoved;
+	boolean taken, isWhite, unmoved, enPassant;
 
 	String notation = "";
 	
@@ -25,8 +25,17 @@ public class Piece {
 			notation = type.substring(0,1);
 		}
 		unmoved = true;
+		enPassant = false;
 	}
 	
+	public boolean getEnPassant() {
+		return enPassant;
+	}
+
+	public void setEnPassant(boolean enPassant) {
+		this.enPassant = enPassant;
+	}
+
 	public String getNotation() {
 		return notation;
 	}
