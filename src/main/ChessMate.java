@@ -141,6 +141,8 @@ public class ChessMate extends Application {
 		}
 		((RadioMenuItem) playerOptions.get(0)).setSelected(true);
 		
+		
+		
 		allItems.add(menuItemOptions);
 		allItems.add(clockOptions);
 		allItems.add(settingsOptions);
@@ -162,7 +164,7 @@ public class ChessMate extends Application {
 			cols.add((char) a);
 		}
 		root.setTop(menuBar);
-		menuItemOptions.get(3).setOnAction(actionEvent -> Platform.exit());
+		menuItemOptions.get(3).setOnAction(actionEvent ->System.exit(0));
 
 		for(int i = 0; i < menus.length; i++) {
 	    	menuOptions.get(i).getItems().addAll(allItems.get(i));
@@ -232,13 +234,19 @@ public class ChessMate extends Application {
 	public void start(Stage primaryStage) {		
 	    menuBar.prefWidthProperty().bind(primaryStage.widthProperty());
 	   
+	    menuOptions.get(0).setOnAction(new EventHandler<ActionEvent>() {
+		    @Override public void handle(ActionEvent e) {
+		    	System.out.println("New game");
+		    	ChessMate chessMate = new ChessMate(player1, player2, clock1, clock2);
+		        chessMate.start(primaryStage);
+		    }
+		});
+	    
 	    setInitialOccupiedGrid();
 	    
 	    moves  = new ArrayList<>();
 	    
 	    setUpBoard();
-	    
-	    
 	    
 		setUpImages(whiteImages, true);
 		setUpImages(blackImages, false);
@@ -273,6 +281,7 @@ public class ChessMate extends Application {
 		BorderPane.setMargin(bottomPane, new Insets(10, 10, 10, 10));
 		BorderPane.setAlignment(board,Pos.CENTER);
 		Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
+		primaryStage.setOnCloseRequest(e -> System.exit(0));
 		primaryStage.setScene(new Scene(root));
 		primaryStage.setX(primaryScreenBounds.getMinX());
 		primaryStage.setY(primaryScreenBounds.getMinY());
@@ -280,6 +289,7 @@ public class ChessMate extends Application {
 		primaryStage.setHeight(primaryScreenBounds.getHeight());
 		primaryStage.setTitle("ChessMate");
 		primaryStage.show(); 
+		
 		
 		//Testing out functionality of interpreted textfile
 //		try {
@@ -364,6 +374,7 @@ public class ChessMate extends Application {
 			            			movePiece(board, currentPiece, piece.getCol(), piece.getRow());
 			            			String str2 = " ";
 			            			String str = " ";
+			            			Piece was_current = current, was_next = piece; //Maybe do this?
 			            			str = recordMove_algebraic_notation(current, current.getCol(), current.getRow(), piece.getCol(), piece.getRow(), true, false, false, false, false);
 			            			if(textToSpeech) {
 				            			String command = getStringCommand(current, current.getCol(), current.getRow(), piece.getCol(), piece.getRow(), true, false);
@@ -393,7 +404,8 @@ public class ChessMate extends Application {
 		            				removeHighlights(validMoves);
 		            				validMoves.clear();
 		            			}
-		            			//System.out.println("Check: "+ detectCheck(pieces.get(5), pieces, otherPieces));
+		            			//This needs to be above the algebraic notation line to allow check to be written to file
+		            			System.out.println("Check: "+ detectCheck(pieces.get(5), pieces, otherPieces));
 		            		}
 		            		
 		            	}
@@ -508,7 +520,7 @@ public class ChessMate extends Application {
 			            			removeHighlights(validMoves);
 			            			validMoves.clear();
 			            		}
-			            		//System.out.println("Check: "+ detectCheck(otherPieces.get(5), otherPieces, thesePieces));
+			            		System.out.println("Check: "+ detectCheck(otherPieces.get(5), otherPieces, thesePieces));
 				            }
 				        }
 			        });
@@ -1113,6 +1125,10 @@ public class ChessMate extends Application {
 			 if(colTo == 3) {
 				 move += "-0";
 			 }
+		 }if(check) {
+			 move+="\u2020";
+		 }else if(checkMate) {
+			 move+="\u2021";
 		 }
 		 return move;
 	 }
