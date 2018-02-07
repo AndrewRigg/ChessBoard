@@ -141,6 +141,8 @@ public class ChessMate extends Application {
 		}
 		((RadioMenuItem) playerOptions.get(0)).setSelected(true);
 		
+		
+		
 		allItems.add(menuItemOptions);
 		allItems.add(clockOptions);
 		allItems.add(settingsOptions);
@@ -162,7 +164,7 @@ public class ChessMate extends Application {
 			cols.add((char) a);
 		}
 		root.setTop(menuBar);
-		menuItemOptions.get(3).setOnAction(actionEvent -> Platform.exit());
+		menuItemOptions.get(3).setOnAction(actionEvent ->System.exit(0));
 
 		for(int i = 0; i < menus.length; i++) {
 	    	menuOptions.get(i).getItems().addAll(allItems.get(i));
@@ -232,13 +234,19 @@ public class ChessMate extends Application {
 	public void start(Stage primaryStage) {		
 	    menuBar.prefWidthProperty().bind(primaryStage.widthProperty());
 	   
+	    menuOptions.get(0).setOnAction(new EventHandler<ActionEvent>() {
+		    @Override public void handle(ActionEvent e) {
+		    	System.out.println("New game");
+		    	ChessMate chessMate = new ChessMate(player1, player2, clock1, clock2);
+		        chessMate.start(primaryStage);
+		    }
+		});
+	    
 	    setInitialOccupiedGrid();
 	    
 	    moves  = new ArrayList<>();
 	    
 	    setUpBoard();
-	    
-	    
 	    
 		setUpImages(whiteImages, true);
 		setUpImages(blackImages, false);
@@ -273,6 +281,7 @@ public class ChessMate extends Application {
 		BorderPane.setMargin(bottomPane, new Insets(10, 10, 10, 10));
 		BorderPane.setAlignment(board,Pos.CENTER);
 		Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
+		primaryStage.setOnCloseRequest(e -> System.exit(0));
 		primaryStage.setScene(new Scene(root));
 		primaryStage.setX(primaryScreenBounds.getMinX());
 		primaryStage.setY(primaryScreenBounds.getMinY());
@@ -280,6 +289,7 @@ public class ChessMate extends Application {
 		primaryStage.setHeight(primaryScreenBounds.getHeight());
 		primaryStage.setTitle("ChessMate");
 		primaryStage.show(); 
+		
 		
 		//Testing out functionality of interpreted textfile
 //		try {
@@ -357,43 +367,56 @@ public class ChessMate extends Application {
 		            			ArrayList<Integer> temp = new ArrayList<>();
 		            			temp.add(piece.getCol());
 		            			temp.add(10 - piece.getRow());
-		            			if(validMoves.contains(temp)) {
-			            			int [] tempPos = removePiece(piece);
-			            			occupied[current.getRow()-2][current.getCol()-1] = false;
+		            			String str2 = " ";
+		            			String str = " ";
+		            			Piece was_current, was_next ; //Maybe do this?
 		            			
+		            			
+		            			
+		            			was_current = new Piece(current.getName(), current.getType(), current.getCol(), current.getRow(), current.getImage(), current.isWhite());
+		            			was_next = new Piece(piece.getName(), piece.getType(), piece.getCol(), piece.getRow(), piece.getImage(), piece.isWhite());
+		            			
+		            			
+		            			int [] tempPos = removePiece(piece);
+		            			if(validMoves.contains(temp)) {
+			            			
+			            			occupied[current.getRow()-2][current.getCol()-1] = false;
 			            			movePiece(board, currentPiece, piece.getCol(), piece.getRow());
-			            			String str2 = " ";
-			            			String str = " ";
-			            			str = recordMove_algebraic_notation(current, current.getCol(), current.getRow(), piece.getCol(), piece.getRow(), true, false, false, false, false);
-			            			if(textToSpeech) {
-				            			String command = getStringCommand(current, current.getCol(), current.getRow(), piece.getCol(), piece.getRow(), true, false);
-					            		speak(command);
-			            			}
-			            			if(current.isWhite() && firstMove){
-			            				str2 = lines++ + ": ";
-			            			}else if(current.isWhite()){
-			            				str2 = "\r\n" + lines++ + ": ";
-			            			}
-			            			saveMovesToFile("" + str2 + str);
+			            			
 			            			piece.setTaken(true);
 			            			current.setCol(piece.getCol());
 			            			current.setRow(piece.getRow());
 			            			current.setUnmoved(false);	
-			            			firstMove = false;
+			            			
 			            			piece.setCol(tempPos[0]);
 			            			piece.setRow(tempPos[1]);
-			            			alreadySelected = false;
-			            			swapTurns();
-			            			showOccupied();	
-			            			int []thisPiece = {piece.getCol(), piece.getRow()};
-				            		Moves thisMove = new Moves(piece, thisPiece);
-				            		moves.add(thisMove);
+			            			
 		            			}
 		            			if(!validMoves.isEmpty()) {
 		            				removeHighlights(validMoves);
 		            				validMoves.clear();
 		            			}
-		            			//System.out.println("Check: "+ detectCheck(pieces.get(5), pieces, otherPieces));
+		            			//This needs to be above the algebraic notation line to allow check to be written to file
+		            			System.out.println("Check: "+ detectCheck(pieces.get(5), pieces, otherPieces));
+
+		            			str = recordMove_algebraic_notation(was_current, was_current.getCol(), was_current.getRow(), was_next.getCol(), was_next.getRow(), true, false, false, false, false);
+		            			if(textToSpeech) {
+			            			String command = getStringCommand(was_current, was_current.getCol(), was_current.getRow(), was_next.getCol(), was_next.getRow(), true, false);
+				            		speak(command);
+		            			}
+		            			if(was_current.isWhite() && firstMove){
+		            				str2 = lines++ + ": ";
+		            			}else if(was_current.isWhite()){
+		            				str2 = "\r\n" + lines++ + ": ";
+		            			}
+		            			saveMovesToFile("" + str2 + str);
+		            			firstMove = false;
+		            			alreadySelected = false;
+		            			swapTurns();
+		            			showOccupied();	
+		            			int []thisPiece = {piece.getCol(), piece.getRow()};
+			            		Moves thisMove = new Moves(piece, thisPiece);
+			            		moves.add(thisMove);
 		            		}
 		            		
 		            	}
@@ -427,6 +450,11 @@ public class ChessMate extends Application {
 			            	int col = GridPane.getColumnIndex(pane);
 		            		int row = GridPane.getRowIndex(pane);
 			            	if(piecePicked && !occupied[row-2][col-1]) {
+			            		
+			            		Piece was_current;
+			            		
+			            		was_current = new Piece(current.getName(), current.getType(), current.getCol(), current.getRow(), current.getImage(), current.isWhite());
+			            		
 			            		ArrayList<Integer> temp = new ArrayList<>();
 			            		ArrayList<ImageView> theseImages = (current.isWhite()? whiteImageViews : blackImageViews);
 			            		ArrayList<Piece> otherPieces = (current.isWhite()? blackPieces : whitePieces);
@@ -484,31 +512,37 @@ public class ChessMate extends Application {
 					            		speak(command);
 				            		}
 				            		occupied[current.getRow()-2][current.getCol()-1] = false;
-			            			String str2 = " ";
-			            			String str = recordMove_algebraic_notation(current, current.getCol(), current.getRow(), col, row, false, false, false, false, castling);
-			            			if(current.isWhite() && firstMove){
-			            				str2 = lines++ + ": ";
-			            			}else if(current.isWhite()){
-			            				str2 = "\r\n" + lines++ + ": ";
-			            			}
-			            			saveMovesToFile("" + str2 + str);
+			            			
 			            			current.setCol(col);
 				            		current.setRow(row);
 				            		current.setUnmoved(false);
-				            		firstMove = false;
-				            		piecePicked = false;
-				            		alreadySelected = false;
-				            		showOccupied();	
-				            		swapTurns();
-				            		int []thisPiece = {col, row};
-				            		Moves thisMove = new Moves(current, thisPiece);
-				            		moves.add(thisMove);
+				            		
 			            		}
 			            		if(!validMoves.isEmpty()) {
 			            			removeHighlights(validMoves);
 			            			validMoves.clear();
 			            		}
-			            		//System.out.println("Check: "+ detectCheck(otherPieces.get(5), otherPieces, thesePieces));
+			     
+			            		System.out.println("Check: "+ detectCheck(otherPieces.get(5), otherPieces, thesePieces));
+			            		
+			            		String str2 = " ";
+		            			String str = recordMove_algebraic_notation(was_current, was_current.getCol(), was_current.getRow(), col, row, false, false, false, false, castling);
+		            			if(was_current.isWhite() && firstMove){
+		            				str2 = lines++ + ": ";
+		            			}else if(was_current.isWhite()){
+		            				str2 = "\r\n" + lines++ + ": ";
+		            			}
+		            			saveMovesToFile("" + str2 + str);
+		            			
+		            			
+		            			firstMove = false;
+			            		piecePicked = false;
+			            		alreadySelected = false;
+			            		showOccupied();	
+			            		swapTurns();
+			            		int []thisPiece = {col, row};
+			            		Moves thisMove = new Moves(current, thisPiece);
+			            		moves.add(thisMove);
 				            }
 				        }
 			        });
@@ -1020,14 +1054,22 @@ public class ChessMate extends Application {
 		ArrayList<Integer> kingCoordinates = new ArrayList<>();
 		kingCoordinates.add(king.getCol()-1);
 		kingCoordinates.add(10 - king.getRow());
-		checkMate = false;
-		for(Piece opposite: oppositePieces) {
-			validMoves = getValidMoves(opposite);
-			removeOwnColours(oppositePieces, pieces, opposite);
-			if(validMoves.contains(kingCoordinates)){
-				check = true;
+		checkMate = true;
+		for(Piece same: pieces) {
+			validMoves = getValidMoves(same);
+			removeOwnColours(pieces, oppositePieces, same);
+			//for each valid move, does it lead to check? If so, remove it, otherwise valid move
+			//Need to check state of check if piece were to move to current 'valid move'
+			
+			//This should be done in getValidMoves() method
+			for( ArrayList<Integer> move: validMoves) {
+				
 			}
-			validMoves.clear();
+			
+			if(!validMoves.isEmpty()){
+				validMoves.clear();			//need all pieces to give empty validmoves array to actually have checkMate
+				return checkMate = false; 	//only need one counter example (ie one valid move for checkmate to fail)
+			}
 		}
 		return checkMate;
 	}
@@ -1113,6 +1155,10 @@ public class ChessMate extends Application {
 			 if(colTo == 3) {
 				 move += "-0";
 			 }
+		 }if(check) {
+			 move+="\u2020";
+		 }else if(checkMate) {
+			 move+="\u2021";
 		 }
 		 return move;
 	 }
