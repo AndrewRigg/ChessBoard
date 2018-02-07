@@ -4,77 +4,37 @@ import javafx.scene.image.ImageView;
 public class Piece {
 
 	ImageView image;
-	String name = "";
-	String type = "";
+	String name;
+	char notation;
 	int col;
 	int row;
-	boolean taken, isWhite, unmoved, enPassant;
-
-	String notation = "";
+	Colour colour;
+	boolean taken;
+	boolean moved;
 	
-	public Piece(String name, String type, int col, int row, ImageView image, boolean isWhite) {
+	public Piece(String name, int col, int row, ImageView image, Colour colour) {
 		this.image = image;
 		this.name = name;
-		this.type = type;
 		this.col = col;
 		this.row = row;
-		this.isWhite = isWhite;
-		if(type.equals("Knight")){
-			notation = "N";
-		}else if (!type.equals("Pawn")){
-			notation = type.substring(0,1);
-		}
-		unmoved = true;
-		enPassant = false;
+		this.colour = colour;
+		moved = true;
+	}
+
+	public boolean getMoved() {
+		return moved;
+	}
+
+	public void setMoved(boolean moved) {
+		this.moved = moved;
 	}
 	
-	public boolean getEnPassant() {
-		return enPassant;
-	}
-
-	public void setEnPassant(boolean enPassant) {
-		this.enPassant = enPassant;
-	}
-
-	public String getNotation() {
-		return notation;
-	}
-
-	public void setNotation(String notation) {
-		this.notation = notation;
-	}
-
-	public boolean isUnmoved() {
-		return unmoved;
-	}
-
-	public void setUnmoved(boolean unmoved) {
-		this.unmoved = unmoved;
-	}
-	
-	public boolean isTaken() {
+	public boolean getTaken() {
 		return taken;
-	}
-
-	public Piece(String name) {
-		this.name = name;
-	}
-	
-	public String getName() {
-		return name;
 	}
 	
 	public void setTaken(boolean taken){
 		this.taken = taken;
-	}
-	
-	//This might be needed if e.g. a pawn is promoted to a queen
-	public void setName(String name){
-		this.name = name;
-	}
-	
-	public String getType(){
-		return type;
 	}
 	
 	public int getCol() {
@@ -92,28 +52,4 @@ public class Piece {
 	public void setRow(int row) {
 		this.row = row;
 	}
-	
-	public boolean isWhite() {
-		return isWhite;
-	}
-
-	public void setWhite(boolean isWhite) {
-		this.isWhite = isWhite;
-	}
-
-	//This might be needed if e.g. a pawn is promoted to a queen
-	public void setType(String type){
-		this.type = type;
-	}
-	
-	//This might be needed if e.g. a pawn is promoted to a queen
-	public void setImage(ImageView image){
-		this.image = image;
-	}
-	
-	public ImageView getImage(){
-		return image;
-	}
-	
-	
 }
