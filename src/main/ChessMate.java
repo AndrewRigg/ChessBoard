@@ -381,11 +381,7 @@ public class ChessMate extends Application {
 		            			if(validMoves.contains(temp)) {
 			            			
 			            			occupied[current.getRow()-2][current.getCol()-1] = false;
-		            			
 			            			movePiece(board, currentPiece, piece.getCol(), piece.getRow());
-			            			
-			            			
-			            			
 			            			
 			            			piece.setTaken(true);
 			            			current.setCol(piece.getCol());
@@ -402,15 +398,8 @@ public class ChessMate extends Application {
 		            			}
 		            			//This needs to be above the algebraic notation line to allow check to be written to file
 		            			System.out.println("Check: "+ detectCheck(pieces.get(5), pieces, otherPieces));
-		            			
-		            	
-		            			
-		            			str = recordMove_algebraic_notation(
-		            					was_current, 
-		            					was_current.getCol(), 
-		            					was_current.getRow(), 
-		            					was_next.getCol(), 
-		            					was_next.getRow(), true, false, false, false, false);
+
+		            			str = recordMove_algebraic_notation(was_current, was_current.getCol(), was_current.getRow(), was_next.getCol(), was_next.getRow(), true, false, false, false, false);
 		            			if(textToSpeech) {
 			            			String command = getStringCommand(was_current, was_current.getCol(), was_current.getRow(), was_next.getCol(), was_next.getRow(), true, false);
 				            		speak(command);
@@ -1065,14 +1054,22 @@ public class ChessMate extends Application {
 		ArrayList<Integer> kingCoordinates = new ArrayList<>();
 		kingCoordinates.add(king.getCol()-1);
 		kingCoordinates.add(10 - king.getRow());
-		checkMate = false;
-		for(Piece opposite: oppositePieces) {
-			validMoves = getValidMoves(opposite);
-			removeOwnColours(oppositePieces, pieces, opposite);
-			if(validMoves.contains(kingCoordinates)){
-				check = true;
+		checkMate = true;
+		for(Piece same: pieces) {
+			validMoves = getValidMoves(same);
+			removeOwnColours(pieces, oppositePieces, same);
+			//for each valid move, does it lead to check? If so, remove it, otherwise valid move
+			//Need to check state of check if piece were to move to current 'valid move'
+			
+			//This should be done in getValidMoves() method
+			for( ArrayList<Integer> move: validMoves) {
+				
 			}
-			validMoves.clear();
+			
+			if(!validMoves.isEmpty()){
+				validMoves.clear();			//need all pieces to give empty validmoves array to actually have checkMate
+				return checkMate = false; 	//only need one counter example (ie one valid move for checkmate to fail)
+			}
 		}
 		return checkMate;
 	}
